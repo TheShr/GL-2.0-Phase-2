@@ -120,7 +120,25 @@ Provides a defensive `requests`-based wrapper with strict 3.0s timeouts and erro
 
 ---
 
-## 3. Directory Structure
+## 3. Environment Variables Configuration
+
+GridLock 2.0 isolates environment configurations within the respective directories to improve container boundary protection and decouple dependencies:
+
+### A. Frontend Environment Configuration (`frontend/`)
+Create a `frontend/.env` file (copied from [frontend/.env.example](file:///c:/Users/anujs/OneDrive/Desktop/GridLock%20Phase%202/frontend/.env.example)) with the following keys:
+- `NEXT_PUBLIC_MAPPLS_TOKEN`: The public token for the Mappls Map Client SDK loading.
+- `MAPPLS_TOKEN`: The server-side API authorization token for Mappls REST API routes.
+- `GROQ_API_KEY`: The API key to interface with Llama-3.3-70b-versatile models on Groq.
+
+### B. Backend Environment Configuration (`backend/`)
+Create a `backend/.env` file (copied from [backend/.env.example](file:///c:/Users/anujs/OneDrive/Desktop/GridLock%20Phase%202/backend/.env.example)) containing:
+- `MAPPLS_TOKEN`: The server-side Mappls REST API token for snappings, reverse-geocodings, and matrices.
+
+Both setups fall back gracefully to default developer tokens when local `.env` files are missing, ensuring out-of-the-box system execution. Local `.env` files are globally ignored by Git.
+
+---
+
+## 4. Directory Structure
 
 ```
 GridLock Phase 2/
@@ -161,7 +179,7 @@ GridLock Phase 2/
 
 ---
 
-## 4. How to Execute & Validate
+## 5. How to Execute & Validate
 
 ### A. Run Backend ML Pipeline
 
@@ -223,7 +241,7 @@ The server binds to `http://localhost:3000` (or `3001` if port 3000 is occupied)
 
 ---
 
-## 5. Current System Performance & Validation Metrics
+## 6. Current System Performance & Validation Metrics
 
 The system was evaluated against historical and machine learning baselines on an unseen temporal test split (March 1, 2024, to April 8, 2024).
 

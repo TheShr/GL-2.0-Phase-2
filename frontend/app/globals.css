@@ -1,0 +1,928 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GRIDLOCK 2.0 — GLASSMORPHIC TELEMETRY COCKPIT
+   Design System Tokens & Utilities
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Mesh Gradient Canvas ────────────────────────────────────────────── */
+  --canvas: #F0F2F5;
+
+  /* ── Glass System ────────────────────────────────────────────────────── */
+  --glass-bg: rgba(255, 255, 255, 0.82);
+  --glass-bg-heavy: rgba(255, 255, 255, 0.90);
+  --glass-border: rgba(255, 255, 255, 0.45);
+  --glass-border-subtle: rgba(255, 255, 255, 0.30);
+  --glass-shadow: 0 8px 32px 0 rgba(148, 163, 184, 0.08);
+  --glass-shadow-elevated: 0 12px 48px 0 rgba(148, 163, 184, 0.12);
+  --glass-blur: 24px;
+
+  /* ── Surfaces ────────────────────────────────────────────────────────── */
+  --surface-0: #FFFFFF;
+  --surface-1: #F8FAFC;
+  --surface-2: #F1F5F9;
+
+  /* ── Borders ─────────────────────────────────────────────────────────── */
+  --border-default: rgba(148, 163, 184, 0.25);
+  --border-strong: rgba(100, 116, 139, 0.35);
+
+  /* ── Brand ───────────────────────────────────────────────────────────── */
+  --brand-primary: #0077CC;
+  --brand-accent: #00A3FF;
+  --brand-glow: rgba(0, 163, 255, 0.15);
+
+  /* ── Semantic ─────────────────────────────────────────────────────────── */
+  --color-critical: #E53E3E;
+  --color-critical-glow: rgba(229, 62, 62, 0.18);
+  --color-warning: #D97706;
+  --color-warning-glow: rgba(217, 119, 6, 0.15);
+  --color-success: #059669;
+  --color-success-glow: rgba(5, 150, 105, 0.15);
+
+  /* ── Text ─────────────────────────────────────────────────────────────── */
+  --text-primary: #0F172A;
+  --text-secondary: #334155;
+  --text-muted: #5E6E82;
+  --text-faint: #78889B;
+}
+
+@theme {
+  --color-canvas: var(--canvas);
+  --color-surface-0: var(--surface-0);
+  --color-brand: var(--brand-primary);
+
+  /* High contrast adjustments for frosted glass readability */
+  --color-slate-300: #78889B;
+  --color-slate-400: #475569;
+  --color-slate-500: #334155;
+  --color-slate-600: #1E293B;
+  --color-slate-700: #0F172A;
+  --color-slate-800: #020617;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESET & BASE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  background-color: var(--canvas);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MESH GRADIENT CANVAS
+   Provides the soft colorful depth layer behind glass panels.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.mesh-gradient-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(199, 210, 254, 0.35), transparent),
+    radial-gradient(ellipse 70% 50% at 75% 70%, rgba(167, 243, 208, 0.25), transparent),
+    radial-gradient(ellipse 60% 40% at 50% 50%, rgba(196, 181, 253, 0.18), transparent),
+    radial-gradient(ellipse 90% 70% at 80% 20%, rgba(253, 230, 138, 0.12), transparent),
+    linear-gradient(180deg, #F0F2F5 0%, #E8ECF1 100%);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TYPOGRAPHY
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.font-mono-data {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-feature-settings: 'tnum';
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCROLLBARS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLASSMORPHISM UTILITIES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.glass-panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+.glass-panel-heavy {
+  background: var(--glass-bg-heavy);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow-elevated);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--glass-border-subtle);
+  box-shadow: 0 2px 12px rgba(148, 163, 184, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.glass-card-float {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SEGMENTED CONTROLS
+   Apple-inspired tab switcher pills
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.seg-control-track {
+  display: flex;
+  align-items: center;
+  padding: 3px;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.10);
+  gap: 2px;
+}
+
+.seg-control-btn {
+  flex: 1;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--text-muted);
+  border: none;
+  background: transparent;
+  white-space: nowrap;
+}
+
+.seg-control-btn:hover {
+  color: var(--text-secondary);
+}
+
+.seg-control-btn.active {
+  background: rgba(255, 255, 255, 0.90);
+  color: var(--text-primary);
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.80);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CUSTOM RANGE SLIDERS
+   Sleek pastel track cylinders with gradient thumb
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+input[type="range"].glass-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 100px;
+  background: rgba(226, 232, 240, 0.80);
+  outline: none;
+  transition: background 0.2s;
+}
+
+input[type="range"].glass-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0077CC, #00A3FF);
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 119, 204, 0.30);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="range"].glass-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 3px 12px rgba(0, 119, 204, 0.45);
+}
+
+input[type="range"].glass-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0077CC, #00A3FF);
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 119, 204, 0.30);
+  cursor: pointer;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LEAFLET OVERRIDES — Glass Treatment
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.leaflet-container {
+  background: transparent !important;
+  outline: none;
+  font-family: inherit;
+}
+
+.leaflet-tile {
+  filter: none !important;
+}
+
+.leaflet-bar {
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+.leaflet-bar a {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.30) !important;
+  transition: all 0.15s ease;
+  font-size: 15px;
+  line-height: 30px;
+  width: 32px;
+  height: 32px;
+}
+
+.leaflet-bar a:hover {
+  background: rgba(255, 255, 255, 0.40) !important;
+  color: var(--text-primary) !important;
+}
+
+.mapboxgl-popup-content,
+.mappls-popup-content,
+.mappls-infowindow-content,
+.leaflet-popup-content-wrapper {
+  background: rgba(255, 255, 255, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.50) !important;
+  border-radius: 16px !important;
+  backdrop-filter: blur(28px) !important;
+  -webkit-backdrop-filter: blur(28px) !important;
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.12) !important;
+  color: var(--text-primary) !important;
+  font-family: inherit !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  line-height: 1.5 !important;
+}
+
+.mapboxgl-popup-close-button,
+.mappls-popup-close-button,
+.mappls-infowindow-close-button {
+  color: #64748B !important;
+  font-size: 16px !important;
+  padding: 6px 10px !important;
+  border-top-right-radius: 16px !important;
+  border: none !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  outline: none !important;
+  transition: all 0.15s ease !important;
+  z-index: 10 !important;
+}
+
+.mapboxgl-popup-close-button:hover,
+.mappls-popup-close-button:hover,
+.mappls-infowindow-close-button:hover {
+  color: #1E293B !important;
+  background: rgba(148, 163, 184, 0.08) !important;
+}
+
+.leaflet-popup-tip {
+  background: rgba(255, 255, 255, 0.75) !important;
+  border: none !important;
+}
+
+.leaflet-popup-close-button {
+  display: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PULSE ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
+
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-dot {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.40);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(12px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-up {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-down {
+  from {
+    transform: translateY(-6px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes progress-sweep {
+  0% {
+    left: -50%;
+    width: 30%;
+  }
+
+  50% {
+    width: 60%;
+  }
+
+  100% {
+    left: 100%;
+    width: 30%;
+  }
+}
+
+@keyframes ticker-scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes fade-tab {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in-right 0.25s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-in-up 0.2s ease-out;
+}
+
+.animate-slide-down {
+  animation: slide-in-down 0.2s ease-out;
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-fade-tab {
+  animation: fade-tab 0.3s ease-out;
+}
+
+.pulse-ring-alert {
+  position: relative;
+}
+
+.pulse-ring-alert::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-color: var(--color-critical);
+  animation: pulse-ring 2s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+}
+
+.pulse-ring-cyan {
+  position: relative;
+}
+
+.pulse-ring-cyan::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-color: var(--brand-accent);
+  animation: pulse-ring 2.5s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+}
+
+.pulse-ring-warning {
+  position: relative;
+}
+
+.pulse-ring-warning::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-color: var(--color-warning);
+  animation: pulse-ring 2s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+}
+
+.pulse-ring-violet {
+  position: relative;
+}
+
+.pulse-ring-violet::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-color: #8B5CF6;
+  animation: pulse-ring 2s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PROGRESS & SKELETON
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.skeleton-progress {
+  background: linear-gradient(90deg, #e2e8f0 0%, #f8fafc 50%, #e2e8f0 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+.progress-fill {
+  transition: width 0.6s cubic-bezier(0.23, 1, 0.320, 1);
+}
+
+.loading-bar-track {
+  position: relative;
+  overflow: hidden;
+  background: rgba(226, 232, 240, 0.60);
+  border-radius: 100px;
+}
+
+.loading-bar-sweep {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, #0077CC, #00A3FF);
+  border-radius: 100px;
+  animation: progress-sweep 1.6s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BADGE COMPONENTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.badge-critical {
+  background: rgba(229, 62, 62, 0.10);
+  color: #C53030;
+  border: 1px solid rgba(229, 62, 62, 0.20);
+}
+
+.badge-warning {
+  background: rgba(217, 119, 6, 0.10);
+  color: #B45309;
+  border: 1px solid rgba(217, 119, 6, 0.20);
+}
+
+.badge-monitor {
+  background: rgba(0, 119, 204, 0.10);
+  color: #0066B3;
+  border: 1px solid rgba(0, 119, 204, 0.20);
+}
+
+.badge-success {
+  background: rgba(5, 150, 105, 0.10);
+  color: #047857;
+  border: 1px solid rgba(5, 150, 105, 0.20);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MAP TELEMETRY MARKERS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.telemetry-label {
+  font-family: 'Inter', sans-serif;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HOTSPOT CARD HOVER — Glass Lift Effect
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.hotspot-card {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.hotspot-card:hover {
+  transform: translateY(-2px) scale(1.005);
+  box-shadow: var(--glass-shadow-elevated);
+}
+
+.hotspot-card.selected {
+  border-color: var(--brand-primary) !important;
+  box-shadow: 0 0 0 3px rgba(0, 119, 204, 0.10), var(--glass-shadow-elevated) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TICKER STRIP
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.ticker-track {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  animation: ticker-scroll 40s linear infinite;
+}
+
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NUMBER TRANSITION UTILITY
+   For metric values that change during simulation
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.metric-value {
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+  display: inline-block;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DRAWER SYSTEM — Slide-out panels with spring transitions
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.drawer-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drawer-left {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 90;
+  width: 380px;
+  transform: translateX(-100%);
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
+}
+
+.drawer-left.open {
+  transform: translateX(0);
+}
+
+.drawer-right {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90;
+  width: 400px;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
+}
+
+.drawer-right.open {
+  transform: translateX(0);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BOTTOM SHEET — Collapsible ranking list
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.bottom-sheet {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 52px;
+  z-index: 60;
+  max-height: 340px;
+  transform: translateY(calc(100% - 44px));
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
+}
+
+.bottom-sheet.expanded {
+  transform: translateY(0);
+}
+
+.bottom-sheet-grip {
+  width: 36px;
+  height: 4px;
+  border-radius: 100px;
+  background: rgba(148, 163, 184, 0.35);
+  margin: 0 auto;
+  cursor: grab;
+  transition: background 0.2s;
+}
+
+.bottom-sheet-grip:hover {
+  background: rgba(148, 163, 184, 0.55);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FLOATING KPI CARDS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.floating-kpi {
+  background: var(--glass-bg-heavy);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 14px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: default;
+}
+
+.floating-kpi:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glass-shadow-elevated);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMMAND BAR — Top navigation strip
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.command-bar {
+  background: var(--glass-bg-heavy);
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: 0 4px 20px rgba(148, 163, 184, 0.08);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.command-bar-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.command-bar-btn:hover {
+  background: rgba(148, 163, 184, 0.08);
+  color: var(--text-primary);
+}
+
+.command-bar-btn.active {
+  background: rgba(255, 255, 255, 0.70);
+  border-color: var(--glass-border);
+  color: var(--text-primary);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   POPOVER — Dropdown panels from command bar
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.popover-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  background: var(--glass-bg-heavy);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  box-shadow: var(--glass-shadow-elevated);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding: 12px;
+  min-width: 200px;
+  z-index: 100;
+  animation: slide-in-down 0.15s ease-out;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TIMELINE SCRUBBER — Bottom time selector bar
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.timeline-bar {
+  background: var(--glass-bg-heavy);
+  border-top: 1px solid var(--glass-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+input[type="range"].timeline-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 100px;
+  background: linear-gradient(90deg, rgba(226, 232, 240, 0.60) 0%, rgba(148, 163, 184, 0.30) 100%);
+  outline: none;
+  transition: background 0.2s;
+}
+
+input[type="range"].timeline-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0077CC, #00A3FF);
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 119, 204, 0.35);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="range"].timeline-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 3px 12px rgba(0, 119, 204, 0.50);
+}
+
+input[type="range"].timeline-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0077CC, #00A3FF);
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 119, 204, 0.35);
+  cursor: pointer;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACTION CARDS — Enforcement action buttons
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.action-card {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: 14px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.action-card:hover {
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: var(--glass-shadow);
+  transform: translateY(-1px);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TAB PILLS — Inspector tab navigation
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.tab-pill {
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.tab-pill:hover {
+  color: var(--text-secondary);
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.tab-pill.active {
+  background: rgba(255, 255, 255, 0.80);
+  color: var(--text-primary);
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}

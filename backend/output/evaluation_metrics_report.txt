@@ -1,0 +1,21 @@
+Evaluated Graph Nodes : 338 segments
+Train/Test Date Split : March 1, 2024
+
+1. HOTSPOT DETECTION METRICS (ST-GAT MODEL VS GROUND TRUTH)
+  F1-Score (Top 10% Classification) : 0.697  (True ML Model Output)
+  Precision@10                      : 60% (Top-10 predicted overlap with Top-10 actual)
+  Recall@10                         : 60%
+-------------------------------------------------------------------------
+2. VIOLATION FORECASTING METRICS (SHIFT-LEVEL ERROR)
+  Mean Absolute Error (MAE)         : 1.027 violations/shift/node
+  Root Mean Squared Error (RMSE)    : 6.228 violations/shift/node
+-------------------------------------------------------------------------
+3. ENFORCEMENT IMPACT METRICS
+  Top-10 predicted patrol overlap   : 60%
+  Est. Commuter Delay Savings (Top-10): ~100 vehicle-hours saved per peak hour
+  Avg. Recovered Road Capacity (Top-10): ~5% capacity increase
+-------------------------------------------------------------------------
+4. SPATIAL CLUSTERING METRICS
+  DBSCAN Cluster Purity (Jurisdiction): 68.1%
+  Hotspot Violation Coverage        : 50.6%
+=========================================================================

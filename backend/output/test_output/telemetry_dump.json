@@ -1,0 +1,303 @@
+{
+  "0": {
+    "summary": {
+      "total_hotspots": 7,
+      "total_violations": 114506,
+      "avg_capacity_recovered": 6,
+      "total_savings": 199,
+      "flipkart_impact": {
+        "sla_breaches_avoided": 515,
+        "cost_savings_inr": 128750.0
+      }
+    },
+    "hotspots": [
+      {
+        "rank": 1,
+        "cluster_id": 3,
+        "police_station": "Upparpet",
+        "road_class": "MG Road Central Commercial",
+        "lanes": 3,
+        "lat": 12.9715,
+        "lon": 77.5735,
+        "predicted_risk_index": 0.8270633387499999,
+        "capacity_reduction_rcf": 0.08890938439689199,
+        "logistics_weight": 3.0,
+        "logistics_penalty_index": 0.26672815319067594,
+        "travel_time_before": "4.9",
+        "travel_time_after": "1.7",
+        "delay_savings_per_vehicle": "3.2",
+        "total_commuter_time_saved_hours": 83.72110523074004,
+        "priority_score": 44.826339848031466,
+        "target_shift": "Morning Rush (08:00 - 12:00 IST)",
+        "enforcement_action": "Tow trucks + double-parking citations",
+        "nearest_landmark": "1st Cross Road, Sowrashtrapete, Chickpete, Bengaluru, Karnataka. Pin-560053 (India)",
+        "flipkart_impact": {
+          "sla_breaches_avoided": 352,
+          "cost_savings_inr": 88000.0
+        }
+      },
+      {
+        "rank": 2,
+        "cluster_id": 6,
+        "police_station": "Bellandur",
+        "road_class": "Sarjapur Road",
+        "lanes": 2,
+        "lat": 12.913933333333334,
+        "lon": 77.67886666666666,
+        "predicted_risk_index": 0.1341059216666666,
+        "capacity_reduction_rcf": 0.022347747670974225,
+        "logistics_weight": 3.0,
+        "logistics_penalty_index": 0.06704324301292268,
+        "travel_time_before": "3.0",
+        "travel_time_after": "3.0",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 8.492727184194843,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Sarjapura Main Road, Venkataramanappa Reddy Layout, Kaikondrahalli, Bengaluru, Karnataka. Pin-560035 (India)",
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 3,
+        "cluster_id": 2,
+        "police_station": "HSR Layout",
+        "road_class": "Hosur Road NH 44",
+        "lanes": 4,
+        "lat": 12.898,
+        "lon": 77.63,
+        "predicted_risk_index": 0.1284981272222222,
+        "capacity_reduction_rcf": 0.011139285704004328,
+        "logistics_weight": 3.0,
+        "logistics_penalty_index": 0.033417857112012984,
+        "travel_time_before": "1.9",
+        "travel_time_after": "1.9",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.4807554304072881,
+        "priority_score": 6.095621102278393,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "7th Main Road, Hongasandra, Bengaluru, Karnataka. Pin-560068 (India)",
+        "flipkart_impact": {
+          "sla_breaches_avoided": 2,
+          "cost_savings_inr": 500.0
+        }
+      },
+      {
+        "rank": 4,
+        "cluster_id": 5,
+        "police_station": "Adugodi",
+        "road_class": "Koramangala Inner Ring Road",
+        "lanes": 2,
+        "lat": 12.93493956043956,
+        "lon": 77.62677472527471,
+        "predicted_risk_index": 0.7713823614285715,
+        "capacity_reduction_rcf": 0.12440746912866643,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.12440746912866643,
+        "travel_time_before": "5.5",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "3.9",
+        "total_commuter_time_saved_hours": 61.86125928175528,
+        "priority_score": 33.084935698948385,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "16th Main Road, Sony World Junction, Koramangala, Bengaluru, Karnataka. Pin-560034 (India)",
+        "flipkart_impact": {
+          "sla_breaches_avoided": 87,
+          "cost_savings_inr": 21750.0
+        }
+      },
+      {
+        "rank": 5,
+        "cluster_id": 4,
+        "police_station": "Cubbon Park",
+        "road_class": "MG Road Central Commercial",
+        "lanes": 3,
+        "lat": 12.970499999999998,
+        "lon": 77.5915,
+        "predicted_risk_index": 0.6878251160000001,
+        "capacity_reduction_rcf": 0.05816629076722314,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.05816629076722314,
+        "travel_time_before": "3.3",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "1.7",
+        "total_commuter_time_saved_hours": 26.462237739910208,
+        "priority_score": 25.218165870879147,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Kasturba Road, Siddalingaiah Circle, Gandhi Nagar, Bengaluru, Karnataka. Pin-560001 (India)",
+        "flipkart_impact": {
+          "sla_breaches_avoided": 37,
+          "cost_savings_inr": 9250.0
+        }
+      },
+      {
+        "rank": 6,
+        "cluster_id": 1,
+        "police_station": "Halasur",
+        "road_class": "MG Road Central Commercial",
+        "lanes": 3,
+        "lat": 12.974375000000002,
+        "lon": 77.62023863636364,
+        "predicted_risk_index": 0.4848215775,
+        "capacity_reduction_rcf": 0.05829211501373966,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.05829211501373966,
+        "travel_time_before": "3.3",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "1.7",
+        "total_commuter_time_saved_hours": 26.52625412052978,
+        "priority_score": 19.138155102463436,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Murphy Road, Begum Mahal Junction, Halasuru, Bengaluru, Karnataka. Pin-560008 (India)",
+        "flipkart_impact": {
+          "sla_breaches_avoided": 37,
+          "cost_savings_inr": 9250.0
+        }
+      },
+      {
+        "rank": 7,
+        "cluster_id": 0,
+        "police_station": "Bellandur",
+        "road_class": "Sarjapur Road",
+        "lanes": 2,
+        "lat": 12.9191,
+        "lon": 77.6712,
+        "predicted_risk_index": 0.1266398925,
+        "capacity_reduction_rcf": 0.022477210357142858,
+        "logistics_weight": 3.0,
+        "logistics_penalty_index": 0.06743163107142858,
+        "travel_time_before": "3.0",
+        "travel_time_after": "3.0",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 8.29463884642857,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Sarjapura Main Road, Ambience Diva, Bellandur, Bengaluru, Karnataka. Pin-560103 (India)",
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      }
+    ],
+    "routes": [
+      {
+        "name": "Whitefield Hub \u2794 Koramangala Hub (Route 1)",
+        "coords": [
+          {
+            "lat": 12.969,
+            "lng": 77.75
+          },
+          {
+            "lat": 12.99,
+            "lng": 77.716
+          },
+          {
+            "lat": 12.989,
+            "lng": 77.696
+          },
+          {
+            "lat": 12.956,
+            "lng": 77.701
+          },
+          {
+            "lat": 12.93,
+            "lng": 77.68
+          },
+          {
+            "lat": 12.92,
+            "lng": 77.67
+          },
+          {
+            "lat": 12.922,
+            "lng": 77.649
+          },
+          {
+            "lat": 12.934,
+            "lng": 77.624
+          }
+        ],
+        "color": "#F43F5E"
+      },
+      {
+        "name": "Electronic City \u2794 Majestic Hub (Route 2)",
+        "coords": [
+          {
+            "lat": 12.845,
+            "lng": 77.663
+          },
+          {
+            "lat": 12.879,
+            "lng": 77.644
+          },
+          {
+            "lat": 12.863,
+            "lng": 77.659
+          },
+          {
+            "lat": 12.903,
+            "lng": 77.624
+          },
+          {
+            "lat": 12.917,
+            "lng": 77.622
+          },
+          {
+            "lat": 12.921,
+            "lng": 77.618
+          },
+          {
+            "lat": 12.943,
+            "lng": 77.611
+          },
+          {
+            "lat": 12.969,
+            "lng": 77.588
+          },
+          {
+            "lat": 12.978,
+            "lng": 77.571
+          }
+        ],
+        "color": "#D97706"
+      },
+      {
+        "name": "Hebbal Hub \u2794 Indiranagar Hub (Route 3)",
+        "coords": [
+          {
+            "lat": 13.035,
+            "lng": 77.597
+          },
+          {
+            "lat": 13.024,
+            "lng": 77.619
+          },
+          {
+            "lat": 13.018,
+            "lng": 77.643
+          },
+          {
+            "lat": 13.007,
+            "lng": 77.663
+          },
+          {
+            "lat": 13.004,
+            "lng": 77.675
+          },
+          {
+            "lat": 12.978,
+            "lng": 77.641
+          }
+        ],
+        "color": "#2563EB"
+      }
+    ]
+  }
+}

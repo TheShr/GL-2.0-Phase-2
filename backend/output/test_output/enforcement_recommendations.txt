@@ -1,0 +1,117 @@
+=========================================================================
+                 GRIDLOCK 2.0 TIERED ENFORCEMENT DISPATCH SCHEDULE
+=========================================================================
+
+Analyzing 7 high-density illegal parking hotspots in Bengaluru.
+Traffic Simulation Baseline: Greenshields Speed-Density CTM Pipeline
+
+=== TIER 1 - CRITICAL ENFORCEMENT ZONES (Count: 4) ===
+-------------------------------------------------------------------------
+RANK 1: Cluster 3 | Upparpet Police Station
+  Centroid Coordinates    : (12.9715, 77.5735)
+  Nearest Landmark        : 1st Cross Road, Sowrashtrapete, Chickpete, Bengaluru, Karnataka. Pin-560053 (India)
+  Road Classification     : MG Road Central Commercial (3 lanes)
+  Predicted GNN Risk Index: ~0.83
+  Priority Index Score    : ~44.8/100
+  Estimated Capacity Loss : ~9% (road choke factor)
+  Travel Time status quo  : ~5 min per km (incl. queuing)
+  Travel Time optimized   : ~2 min per km
+  Commuter Delay Savings  : ~3 min saved per vehicle
+  System Impact / Hour    : ~80 hours saved
+  Recommended Dispatch    : Morning Rush (08:00 - 12:00 IST)
+  Tactical Action Plan    : Tow trucks + double-parking citations
+-------------------------------------------------------------------------
+RANK 4: Cluster 5 | Adugodi Police Station
+  Centroid Coordinates    : (12.9349, 77.6268)
+  Nearest Landmark        : 16th Main Road, Sony World Junction, Koramangala, Bengaluru, Karnataka. Pin-560034 (India)
+  Road Classification     : Koramangala Inner Ring Road (2 lanes)
+  Predicted GNN Risk Index: ~0.77
+  Priority Index Score    : ~33.1/100
+  Estimated Capacity Loss : ~12% (road choke factor)
+  Travel Time status quo  : ~6 min per km (incl. queuing)
+  Travel Time optimized   : ~2 min per km
+  Commuter Delay Savings  : ~4 min saved per vehicle
+  System Impact / Hour    : ~60 hours saved
+  Recommended Dispatch    : Night/Early Morning Patrol (04:00 - 08:00 IST)
+  Tactical Action Plan    : Wheel clamping + lane clearance
+-------------------------------------------------------------------------
+RANK 5: Cluster 4 | Cubbon Park Police Station
+  Centroid Coordinates    : (12.9705, 77.5915)
+  Nearest Landmark        : Kasturba Road, Siddalingaiah Circle, Gandhi Nagar, Bengaluru, Karnataka. Pin-560001 (India)
+  Road Classification     : MG Road Central Commercial (3 lanes)
+  Predicted GNN Risk Index: ~0.69
+  Priority Index Score    : ~25.2/100
+  Estimated Capacity Loss : ~6% (road choke factor)
+  Travel Time status quo  : ~3 min per km (incl. queuing)
+  Travel Time optimized   : ~2 min per km
+  Commuter Delay Savings  : ~2 min saved per vehicle
+  System Impact / Hour    : ~30 hours saved
+  Recommended Dispatch    : Night/Early Morning Patrol (04:00 - 08:00 IST)
+  Tactical Action Plan    : Wheel clamping + lane clearance
+-------------------------------------------------------------------------
+RANK 6: Cluster 1 | Halasur Police Station
+  Centroid Coordinates    : (12.9744, 77.6202)
+  Nearest Landmark        : Murphy Road, Begum Mahal Junction, Halasuru, Bengaluru, Karnataka. Pin-560008 (India)
+  Road Classification     : MG Road Central Commercial (3 lanes)
+  Predicted GNN Risk Index: ~0.48
+  Priority Index Score    : ~19.1/100
+  Estimated Capacity Loss : ~6% (road choke factor)
+  Travel Time status quo  : ~3 min per km (incl. queuing)
+  Travel Time optimized   : ~2 min per km
+  Commuter Delay Savings  : ~2 min saved per vehicle
+  System Impact / Hour    : ~30 hours saved
+  Recommended Dispatch    : Night/Early Morning Patrol (04:00 - 08:00 IST)
+  Tactical Action Plan    : Wheel clamping + lane clearance
+-------------------------------------------------------------------------
+
+
+=== TIER 2 - MODERATE ACTION ZONES (Count: 3) ===
+-------------------------------------------------------------------------
+RANK 2: Cluster 6 | Bellandur Police Station
+  Centroid Coordinates    : (12.9139, 77.6789)
+  Nearest Landmark        : Sarjapura Main Road, Venkataramanappa Reddy Layout, Kaikondrahalli, Bengaluru, Karnataka. Pin-560035 (India)
+  Road Classification     : Sarjapur Road (2 lanes)
+  Predicted GNN Risk Index: ~0.13
+  Priority Index Score    : ~8.5/100
+  Estimated Capacity Loss : ~2% (road choke factor)
+  Travel Time status quo  : ~3 min per km (incl. queuing)
+  Travel Time optimized   : ~3 min per km
+  Commuter Delay Savings  : ~0 min saved per vehicle
+  System Impact / Hour    : ~0 hours saved
+  Recommended Dispatch    : Night/Early Morning Patrol (04:00 - 08:00 IST)
+  Tactical Action Plan    : Wheel clamping + lane clearance
+-------------------------------------------------------------------------
+RANK 3: Cluster 2 | HSR Layout Police Station
+  Centroid Coordinates    : (12.8980, 77.6300)
+  Nearest Landmark        : 7th Main Road, Hongasandra, Bengaluru, Karnataka. Pin-560068 (India)
+  Road Classification     : Hosur Road NH 44 (4 lanes)
+  Predicted GNN Risk Index: ~0.13
+  Priority Index Score    : ~6.1/100
+  Estimated Capacity Loss : ~1% (road choke factor)
+  Travel Time status quo  : ~2 min per km (incl. queuing)
+  Travel Time optimized   : ~2 min per km
+  Commuter Delay Savings  : ~0 min saved per vehicle
+  System Impact / Hour    : ~0 hours saved
+  Recommended Dispatch    : Night/Early Morning Patrol (04:00 - 08:00 IST)
+  Tactical Action Plan    : Wheel clamping + lane clearance
+-------------------------------------------------------------------------
+RANK 7: Cluster 0 | Bellandur Police Station
+  Centroid Coordinates    : (12.9191, 77.6712)
+  Nearest Landmark        : Sarjapura Main Road, Ambience Diva, Bellandur, Bengaluru, Karnataka. Pin-560103 (India)
+  Road Classification     : Sarjapur Road (2 lanes)
+  Predicted GNN Risk Index: ~0.13
+  Priority Index Score    : ~8.3/100
+  Estimated Capacity Loss : ~2% (road choke factor)
+  Travel Time status quo  : ~3 min per km (incl. queuing)
+  Travel Time optimized   : ~3 min per km
+  Commuter Delay Savings  : ~0 min saved per vehicle
+  System Impact / Hour    : ~0 hours saved
+  Recommended Dispatch    : Night/Early Morning Patrol (04:00 - 08:00 IST)
+  Tactical Action Plan    : Wheel clamping + lane clearance
+-------------------------------------------------------------------------
+
+
+=== TIER 3 - MONITOR & REPORT ZONES (Count: 0) ===
+-------------------------------------------------------------------------
+  No hotspots fall under this tier.
+-------------------------------------------------------------------------

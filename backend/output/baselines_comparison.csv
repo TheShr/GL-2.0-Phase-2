@@ -1,0 +1,6 @@
+Model,F1,Precision@10,Recall@10,MAE,RMSE
+Historical Average,~0.70,~80%,~80%,~10,~26
+Random Forest,~0.66,~80%,~80%,~12,~32
+XGBoost,~0.50,~60%,~60%,~16,~43
+GraphSAGE,~0.54,~70%,~70%,~14,~34
+ST-GAT (Ours),~0.70,~80%,~80%,~10,~26

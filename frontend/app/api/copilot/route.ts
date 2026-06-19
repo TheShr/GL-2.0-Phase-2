@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
-const MAPPLS_TOKEN = "rysmqsqzhyrdjzzdhxthpgdljebmkdipyjmb";
+const MAPPLS_TOKEN = process.env.MAPPLS_TOKEN || process.env.NEXT_PUBLIC_MAPPLS_TOKEN || "rysmqsqzhyrdjzzdhxthpgdljebmkdipyjmb";
 
 async function maccAutosuggest(query: string) {
   const url = `https://atlas.mappls.com/api/places/geocode/autocomplete?access_token=${MAPPLS_TOKEN}&query=${encodeURIComponent(query)}&location=12.9716,77.5946`;

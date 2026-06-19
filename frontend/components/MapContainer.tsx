@@ -180,7 +180,7 @@ export default function MapContainer({ hotspots, selectedId, onSelectHotspot, ro
 
     const webScriptId = "mappls-web-maps-sdk";
     const pluginsScriptId = "mappls-web-plugins-sdk";
-    const accessToken = "rysmqsqzhyrdjzzdhxthpgdljebmkdipyjmb";
+    const accessToken = process.env.NEXT_PUBLIC_MAPPLS_TOKEN || "rysmqsqzhyrdjzzdhxthpgdljebmkdipyjmb";
 
     // 7-second script loading timeout safeguard (covering both scripts)
     const timeoutTimer = setTimeout(() => {

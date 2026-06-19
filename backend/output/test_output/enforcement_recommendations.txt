@@ -5,7 +5,7 @@
 Analyzing 7 high-density illegal parking hotspots in Bengaluru.
 Traffic Simulation Baseline: Greenshields Speed-Density CTM Pipeline
 
-=== TIER 1 - CRITICAL ENFORCEMENT ZONES (Count: 4) ===
+=== TIER 1 - CRITICAL ENFORCEMENT ZONES (Count: 7) ===
 -------------------------------------------------------------------------
 RANK 1: Cluster 3 | Upparpet Police Station
   Centroid Coordinates    : (12.9715, 77.5735)
@@ -20,6 +20,34 @@ RANK 1: Cluster 3 | Upparpet Police Station
   System Impact / Hour    : ~80 hours saved
   Recommended Dispatch    : Morning Rush (08:00 - 12:00 IST)
   Tactical Action Plan    : Tow trucks + double-parking citations
+-------------------------------------------------------------------------
+RANK 2: Cluster 2 | HSR Layout Police Station
+  Centroid Coordinates    : (12.8980, 77.6300)
+  Nearest Landmark        : 7th Main Road, Hongasandra, Bengaluru, Karnataka. Pin-560068 (India)
+  Road Classification     : Hosur Road NH 44 (4 lanes)
+  Predicted GNN Risk Index: ~0.13
+  Priority Index Score    : ~43.0/100
+  Estimated Capacity Loss : ~1% (road choke factor)
+  Travel Time status quo  : ~2 min per km (incl. queuing)
+  Travel Time optimized   : ~2 min per km
+  Commuter Delay Savings  : ~8 min saved per vehicle
+  System Impact / Hour    : ~540 hours saved
+  Recommended Dispatch    : Night/Early Morning Patrol (04:00 - 08:00 IST)
+  Tactical Action Plan    : Wheel clamping + lane clearance
+-------------------------------------------------------------------------
+RANK 3: Cluster 6 | Bellandur Police Station
+  Centroid Coordinates    : (12.9139, 77.6789)
+  Nearest Landmark        : Sarjapura Main Road, Venkataramanappa Reddy Layout, Kaikondrahalli, Bengaluru, Karnataka. Pin-560035 (India)
+  Road Classification     : Sarjapur Road (2 lanes)
+  Predicted GNN Risk Index: ~0.13
+  Priority Index Score    : ~31.3/100
+  Estimated Capacity Loss : ~2% (road choke factor)
+  Travel Time status quo  : ~3 min per km (incl. queuing)
+  Travel Time optimized   : ~3 min per km
+  Commuter Delay Savings  : ~6 min saved per vehicle
+  System Impact / Hour    : ~370 hours saved
+  Recommended Dispatch    : Night/Early Morning Patrol (04:00 - 08:00 IST)
+  Tactical Action Plan    : Wheel clamping + lane clearance
 -------------------------------------------------------------------------
 RANK 4: Cluster 5 | Adugodi Police Station
   Centroid Coordinates    : (12.9349, 77.6268)
@@ -63,51 +91,25 @@ RANK 6: Cluster 1 | Halasur Police Station
   Recommended Dispatch    : Night/Early Morning Patrol (04:00 - 08:00 IST)
   Tactical Action Plan    : Wheel clamping + lane clearance
 -------------------------------------------------------------------------
-
-
-=== TIER 2 - MODERATE ACTION ZONES (Count: 3) ===
--------------------------------------------------------------------------
-RANK 2: Cluster 6 | Bellandur Police Station
-  Centroid Coordinates    : (12.9139, 77.6789)
-  Nearest Landmark        : Sarjapura Main Road, Venkataramanappa Reddy Layout, Kaikondrahalli, Bengaluru, Karnataka. Pin-560035 (India)
-  Road Classification     : Sarjapur Road (2 lanes)
-  Predicted GNN Risk Index: ~0.13
-  Priority Index Score    : ~8.5/100
-  Estimated Capacity Loss : ~2% (road choke factor)
-  Travel Time status quo  : ~3 min per km (incl. queuing)
-  Travel Time optimized   : ~3 min per km
-  Commuter Delay Savings  : ~0 min saved per vehicle
-  System Impact / Hour    : ~0 hours saved
-  Recommended Dispatch    : Night/Early Morning Patrol (04:00 - 08:00 IST)
-  Tactical Action Plan    : Wheel clamping + lane clearance
--------------------------------------------------------------------------
-RANK 3: Cluster 2 | HSR Layout Police Station
-  Centroid Coordinates    : (12.8980, 77.6300)
-  Nearest Landmark        : 7th Main Road, Hongasandra, Bengaluru, Karnataka. Pin-560068 (India)
-  Road Classification     : Hosur Road NH 44 (4 lanes)
-  Predicted GNN Risk Index: ~0.13
-  Priority Index Score    : ~6.1/100
-  Estimated Capacity Loss : ~1% (road choke factor)
-  Travel Time status quo  : ~2 min per km (incl. queuing)
-  Travel Time optimized   : ~2 min per km
-  Commuter Delay Savings  : ~0 min saved per vehicle
-  System Impact / Hour    : ~0 hours saved
-  Recommended Dispatch    : Night/Early Morning Patrol (04:00 - 08:00 IST)
-  Tactical Action Plan    : Wheel clamping + lane clearance
--------------------------------------------------------------------------
 RANK 7: Cluster 0 | Bellandur Police Station
   Centroid Coordinates    : (12.9191, 77.6712)
   Nearest Landmark        : Sarjapura Main Road, Ambience Diva, Bellandur, Bengaluru, Karnataka. Pin-560103 (India)
   Road Classification     : Sarjapur Road (2 lanes)
   Predicted GNN Risk Index: ~0.13
-  Priority Index Score    : ~8.3/100
+  Priority Index Score    : ~31.0/100
   Estimated Capacity Loss : ~2% (road choke factor)
   Travel Time status quo  : ~3 min per km (incl. queuing)
   Travel Time optimized   : ~3 min per km
-  Commuter Delay Savings  : ~0 min saved per vehicle
-  System Impact / Hour    : ~0 hours saved
+  Commuter Delay Savings  : ~6 min saved per vehicle
+  System Impact / Hour    : ~370 hours saved
   Recommended Dispatch    : Night/Early Morning Patrol (04:00 - 08:00 IST)
   Tactical Action Plan    : Wheel clamping + lane clearance
+-------------------------------------------------------------------------
+
+
+=== TIER 2 - MODERATE ACTION ZONES (Count: 0) ===
+-------------------------------------------------------------------------
+  No hotspots fall under this tier.
 -------------------------------------------------------------------------
 
 

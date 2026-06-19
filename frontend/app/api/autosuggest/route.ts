@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Missing query parameter" }, { status: 400 });
   }
 
-  const token = "rysmqsqzhyrdjzzdhxthpgdljebmkdipyjmb";
+  const token = process.env.MAPPLS_TOKEN || process.env.NEXT_PUBLIC_MAPPLS_TOKEN || "rysmqsqzhyrdjzzdhxthpgdljebmkdipyjmb";
   const biasLat = 12.9716;
   const biasLon = 77.5946;
 

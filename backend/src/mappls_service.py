@@ -1,3 +1,4 @@
+import os
 import requests
 import logging
 
@@ -5,9 +6,30 @@ import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("MapplsService")
 
+# Load environment variables from backend/.env if it exists
+def load_env_file():
+    src_dir = os.path.dirname(os.path.abspath(__file__))
+    backend_dir = os.path.dirname(src_dir)
+    env_path = os.path.join(backend_dir, ".env")
+    if os.path.exists(env_path):
+        try:
+            with open(env_path, "r") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#"):
+                        parts = line.split("=", 1)
+                        if len(parts) == 2:
+                            key = parts[0].strip()
+                            val = parts[1].strip()
+                            os.environ[key] = val
+        except Exception as e:
+            logger.warning(f"Failed to read .env file at {env_path}: {e}")
+
+load_env_file()
+
 class MapplsService:
     def __init__(self):
-        self.token = "rysmqsqzhyrdjzzdhxthpgdljebmkdipyjmb"
+        self.token = os.environ.get("MAPPLS_TOKEN", "rysmqsqzhyrdjzzdhxthpgdljebmkdipyjmb")
         self.timeout = 3.0  # Strict timeout limit of 3.0 seconds
 
         # Predefined Flipkart Logistics Routes

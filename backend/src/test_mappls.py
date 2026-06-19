@@ -6,7 +6,7 @@ class TestMapplsService(unittest.TestCase):
         self.service = MapplsService()
 
     def test_initialization(self):
-        self.assertEqual(self.service.token, "rysmqsqzhyrdjzzdhxthpgdljebmkdipyjmb")
+        self.assertTrue(len(self.service.token) > 0)
         self.assertEqual(self.service.timeout, 3.0)
 
     def test_snap_to_road_fallback(self):

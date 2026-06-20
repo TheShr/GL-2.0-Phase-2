@@ -27,7 +27,8 @@ __pycache__/
 temp_cleaned_violations.csv
 test_cleaned_subset.csv
 *police_violation*.csv
-/backend/dataset/
+/backend/dataset/*
+!/backend/dataset/*.csv.gz
 
 # Next.js build output
 .next/

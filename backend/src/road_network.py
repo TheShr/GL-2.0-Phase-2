@@ -543,7 +543,9 @@ def construct_graph(cleaned_df_path, output_dir="output"):
 if __name__ == "__main__":
     from data_pipeline import load_and_clean_data
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    csv_path = os.path.abspath(os.path.join(current_dir, "..", "dataset", "jan to may police violation_anonymized791b166.csv"))
+    csv_path = os.path.abspath(os.path.join(current_dir, "..", "dataset", "jan to may police violation_anonymized791b166.csv.gz"))
+    if not os.path.exists(csv_path):
+        csv_path = os.path.abspath(os.path.join(current_dir, "..", "dataset", "jan to may police violation_anonymized791b166.csv"))
     if not os.path.exists(csv_path):
         csv_path = r"c:\Users\anujs\OneDrive\Desktop\GridLock Phase 2\backend\dataset\jan to may police violation_anonymized791b166.csv"
     cleaned_df = load_and_clean_data(csv_path)

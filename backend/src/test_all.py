@@ -14,7 +14,9 @@ from recommendation_engine import generate_enforcement_recommendations
 def test_pipeline_and_graph():
     print("\n--- Testing Data Pipeline and Graph Construction ---")
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    csv_path = os.path.abspath(os.path.join(current_dir, "..", "dataset", "jan to may police violation_anonymized791b166.csv"))
+    csv_path = os.path.abspath(os.path.join(current_dir, "..", "dataset", "jan to may police violation_anonymized791b166.csv.gz"))
+    if not os.path.exists(csv_path):
+        csv_path = os.path.abspath(os.path.join(current_dir, "..", "dataset", "jan to may police violation_anonymized791b166.csv"))
     if not os.path.exists(csv_path):
         csv_path = r"c:\Users\anujs\OneDrive\Desktop\GridLock Phase 2\backend\dataset\jan to may police violation_anonymized791b166.csv"
     

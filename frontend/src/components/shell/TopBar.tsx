@@ -2,18 +2,26 @@ import { useEffect, useState } from "react";
 import { Sun, Moon, Search } from "lucide-react";
 import { useTheme } from "@/lib/theme";
 import { useApp } from "@/lib/app-context";
-import { CITY_RISK_INDEX, OFFICERS_DEPLOYED } from "@/lib/mock";
 import { cn } from "@/lib/utils";
 
-function UtcClock() {
+function IstClock() {
   const [now, setNow] = useState("--:--:--");
   useEffect(() => {
-    const tick = () => setNow(new Date().toISOString().slice(11, 19));
+    const tick = () => {
+      const options: Intl.DateTimeFormatOptions = {
+        timeZone: "Asia/Kolkata",
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      };
+      setNow(new Intl.DateTimeFormat("en-US", options).format(new Date()));
+    };
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
-  return <span className="readout">{now} UTC</span>;
+  return <span className="readout text-text-primary">{now} IST</span>;
 }
 
 export function TopBar() {
@@ -36,31 +44,19 @@ export function TopBar() {
       {/* wordmark */}
       <div className="flex items-center gap-2 w-auto md:w-48 shrink-0">
         <span className="h-2 w-2 bg-signal" />
-        <span className="wordmark text-xs">Atlas</span>
+        <span className="wordmark text-xs font-bold uppercase tracking-wider">Atlas</span>
       </div>
 
-      {/* telemetry strip */}
-      <div className="hidden md:flex flex-1 items-center justify-center gap-6 text-[11px] text-text-muted">
-        <UtcClock />
-        <span className="flex items-center gap-1.5">
-          <span className="eyebrow">CITY RISK</span>
-          <span className="readout text-text-primary">{CITY_RISK_INDEX}</span>
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="eyebrow">OFFICERS</span>
-          <span className="readout text-text-primary">{OFFICERS_DEPLOYED}</span>
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="eyebrow">MODE</span>
-          <span className="readout text-text-primary uppercase">{reportMode}</span>
-        </span>
-      </div>
-
-      {/* spacer for mobile layout alignment */}
-      <div className="flex-1 md:hidden" />
+      {/* spacer to push right controls to the far right */}
+      <div className="flex-1" />
 
       {/* right controls */}
       <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        {/* IST Clock pushed to the left-most side of right controls, adjacent to search */}
+        <div className="text-[11px] text-text-muted mr-1 sm:mr-2 select-none">
+          <IstClock />
+        </div>
+
         <button
           onClick={() => setCmdkOpen(true)}
           className="flex items-center gap-1.5 border border-hairline px-2 py-1 text-[11px] text-text-muted hover:text-text-primary"

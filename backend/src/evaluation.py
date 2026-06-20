@@ -13,9 +13,9 @@ sys.path.append(os.path.dirname(__file__))
 from model import STGATModel
 from road_network import snap_coordinates
 
-def run_system_evaluation(raw_csv_path, nodes_csv_path, edges_json_path, output_dir="output"):
+def run_system_evaluation(raw_csv_path, nodes_csv_path, edges_json_path, output_dir="output", log_transform=True):
     print("\n=========================================================================")
-    print("                 GRIDLOCK 2.0 AI SYSTEM EVALUATION SUITE")
+    print("                      ATLAS AI SYSTEM EVALUATION SUITE")
     print("=========================================================================\n")
     
     # 1. Load data
@@ -121,7 +121,7 @@ def run_system_evaluation(raw_csv_path, nodes_csv_path, edges_json_path, output_
         raise FileNotFoundError("Trained model files not found. Run train.py first.")
         
     print("Loading ST-GAT GNN model...")
-    model = STGATModel(num_nodes=num_nodes, in_features=num_features, spatial_hidden=16, temporal_hidden=8)
+    model = STGATModel(num_nodes=num_nodes, in_features=num_features, spatial_hidden=16, temporal_hidden=8, log_transform=log_transform)
     model.load_state_dict(torch.load(stgat_path))
     model.eval()
     
@@ -163,7 +163,10 @@ def run_system_evaluation(raw_csv_path, nodes_csv_path, edges_json_path, output_
         
         # GNN predict
         with torch.no_grad():
-            gnn_pred = model(x_seq_s, edge_index).squeeze(0).numpy() # [num_nodes]
+            gnn_pred_tensor = model(x_seq_s, edge_index).squeeze(0) # [num_nodes]
+            if getattr(model, 'log_transform', False):
+                gnn_pred_tensor = torch.expm1(gnn_pred_tensor)
+            gnn_pred = gnn_pred_tensor.cpu().numpy()
             
         # XGBoost predict
         xgb_input = []
@@ -172,6 +175,8 @@ def run_system_evaluation(raw_csv_path, nodes_csv_path, edges_json_path, output_
             xgb_input.append(node_seq.mean(axis=0))
         xgb_input = np.array(xgb_input)
         xgb_pred = xgb.predict(xgb_input) # [num_nodes]
+        if getattr(model, 'log_transform', False):
+            xgb_pred = np.expm1(xgb_pred)
         
         # Hybrid prediction: 60% GNN + 40% XGBoost, mapped to violations scale
         y_pred_s = (0.6 * gnn_pred + 0.4 * xgb_pred) * 20.0
@@ -301,6 +306,6 @@ if __name__ == "__main__":
     edges_json = "output/graph_edges.json"
     
     if os.path.exists(raw_csv) and os.path.exists(nodes_csv) and os.path.exists(edges_json):
-        run_system_evaluation(raw_csv, nodes_csv, edges_json)
+        run_system_evaluation(raw_csv, nodes_csv, edges_json, log_transform=True)
     else:
         print("Required CSV/JSON files not found. Ensure pipeline and graph construction have run.")

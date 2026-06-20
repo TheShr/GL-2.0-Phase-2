@@ -9,7 +9,27 @@ import time
 
 from model import STGATModel
 
-def prepare_spatiotemporal_data(cleaned_csv_path, nodes_csv_path, edges_json_path):
+def weighted_huber_loss(pred, target, weights, deltas=1.0):
+    """
+    Computes a weighted Huber loss with node-specific deltas.
+    pred: [batch_size, num_nodes]
+    target: [batch_size, num_nodes]
+    weights: [num_nodes] - node-specific loss weights
+    deltas: [num_nodes] or float - node-specific deltas
+    """
+    error = torch.abs(pred - target)
+    if isinstance(deltas, torch.Tensor):
+        deltas = deltas.unsqueeze(0)  # broadcast over batch dimension
+    huber_mask = error <= deltas
+    quadratic = 0.5 * (error ** 2)
+    linear = deltas * (error - 0.5 * deltas)
+    loss = torch.where(huber_mask, quadratic, linear)
+    
+    # Apply node-specific weights
+    weighted_loss = loss * weights.unsqueeze(0)  # broadcast over batch dimension
+    return weighted_loss.mean()
+
+def prepare_spatiotemporal_data(cleaned_csv_path, nodes_csv_path, edges_json_path, log_transform=False):
     print("Preparing spatio-temporal tensors for ST-GAT training...")
     df = pd.read_csv(cleaned_csv_path)
     nodes_df = pd.read_csv(nodes_csv_path)
@@ -58,22 +78,6 @@ def prepare_spatiotemporal_data(cleaned_csv_path, nodes_csv_path, edges_json_pat
     df['cap_weight'] = df['vehicle_type'].map(vehicle_weights).fillna(0.3)
 
     # 3. Create feature tensor: [num_shifts, num_nodes, num_features]
-    # Features:
-    # 0: Shift Hour Sin
-    # 1: Shift Hour Cos
-    # 2: Shift DayOfWeek Sin
-    # 3: Shift DayOfWeek Cos
-    # 4: Scooter Count
-    # 5: Car Count
-    # 6: Auto Count
-    # 7: Total count (un-normalized risk)
-    # 8: Commercial Density
-    # 9: Transit Density
-    # 10: Dining Density
-    # 11: Corporate Density
-    # 12: Vulnerability Index
-    # 13: Lanes
-    # 14: Target Capacity Loss (weighted sum)
     num_features = 14
     spatial_temporal_grid = np.zeros((num_shifts, num_nodes, num_features + 1))
     
@@ -168,6 +172,10 @@ def prepare_spatiotemporal_data(cleaned_csv_path, nodes_csv_path, edges_json_pat
             vi = nodes_df['vulnerability_index'].values
             target_risk = np.maximum(target_risk, vi * 0.8)
         
+        # Apply target log-transformation if enabled
+        if log_transform:
+            target_risk = np.log1p(target_risk)
+        
         X.append(x_seq)
         Y_risk.append(target_risk)
         
@@ -213,7 +221,11 @@ def run_inference_pipeline(stgat_model, xgb_model, X, edge_index, nodes_df, num_
     
     # 1. GNN Inference
     with torch.no_grad():
-        gnn_risk = stgat_model(last_x_seq, edge_index).squeeze(0).numpy() # shape [num_nodes]
+        gnn_risk_tensor = stgat_model(last_x_seq, edge_index).squeeze(0) # shape [num_nodes]
+        # Auto-detect log_transform and inverse-transform predictions back to [0, 1] range
+        if getattr(stgat_model, 'log_transform', False):
+            gnn_risk_tensor = torch.expm1(gnn_risk_tensor)
+        gnn_risk = gnn_risk_tensor.cpu().numpy()
         
     # 2. XGBoost Inference
     last_x_seq_tab = []
@@ -223,6 +235,9 @@ def run_inference_pipeline(stgat_model, xgb_model, X, edge_index, nodes_df, num_
     last_x_seq_tab = np.array(last_x_seq_tab)
     
     xgb_risk = xgb_model.predict(last_x_seq_tab) # shape [num_nodes]
+    # Auto-detect log_transform and inverse-transform fallback predictions back to [0, 1] range
+    if getattr(stgat_model, 'log_transform', False):
+        xgb_risk = np.expm1(xgb_risk)
     
     # 3. Hybrid Combination (60% GNN + 40% XGBoost)
     hybrid_risk = 0.6 * gnn_risk + 0.4 * xgb_risk
@@ -236,8 +251,8 @@ def run_inference_pipeline(stgat_model, xgb_model, X, edge_index, nodes_df, num_
     # Save to graph_nodes.csv
     nodes_df.to_csv("output/graph_nodes.csv", index=False)
     print("Next shift predicted risk scores calculated and written to output/graph_nodes.csv")
-
-def train_model(epochs=5, batch_size=8):
+ 
+def train_model(epochs=5, batch_size=8, log_transform=True):
     cleaned_csv = "output/graph_nodes.csv"
     raw_csv = "output/temp_cleaned_violations.csv"
     edges_json = "output/graph_edges.json"
@@ -246,9 +261,9 @@ def train_model(epochs=5, batch_size=8):
         print("Required graph files not found. Run pipeline and road_network scripts first.")
         return
         
-    # 1. Prepare data tensors
+    # 1. Prepare data tensors (applying target log-transform if enabled)
     X, Y_risk, edge_index, num_nodes, num_features, nodes_df = prepare_spatiotemporal_data(
-        raw_csv, cleaned_csv, edges_json
+        raw_csv, cleaned_csv, edges_json, log_transform=log_transform
     )
     
     print(f"Tensors constructed successfully.")
@@ -269,7 +284,8 @@ def train_model(epochs=5, batch_size=8):
         num_nodes=num_nodes,
         in_features=num_features,
         spatial_hidden=16,
-        temporal_hidden=8
+        temporal_hidden=8,
+        log_transform=log_transform
     )
     
     class CustomAdam:
@@ -281,7 +297,7 @@ def train_model(epochs=5, batch_size=8):
             self.m = [torch.zeros_like(p) for p in self.params]
             self.v = [torch.zeros_like(p) for p in self.params]
             self.t = 0
-
+ 
         def step(self):
             self.t += 1
             with torch.no_grad():
@@ -294,14 +310,23 @@ def train_model(epochs=5, batch_size=8):
                     m_hat = self.m[i] / (1.0 - self.beta1 ** self.t)
                     v_hat = self.v[i] / (1.0 - self.beta2 ** self.t)
                     p.copy_(p - self.lr * m_hat / (torch.sqrt(v_hat) + self.eps))
-
+ 
         def zero_grad(self):
             for p in self.params:
                 if p.grad is not None:
                     p.grad.zero_()
-
+ 
     optimizer = CustomAdam(model.parameters(), lr=0.005)
-    criterion = nn.MSELoss()
+    
+    # Compute node loss weights based on corporate/transit density and historical violation volumes (log-scaled prior)
+    corp_dens = torch.tensor(nodes_df['corporate_density'].values, dtype=torch.float32)
+    trans_dens = torch.tensor(nodes_df['transit_density'].values, dtype=torch.float32)
+    hist_vols = torch.tensor(np.log1p(nodes_df['total_violations'].values), dtype=torch.float32)
+    # Combined loss weights to prioritize both high POI density zones and high-volume transport corridors
+    node_weights = (1.0 + 2.0 * (corp_dens + trans_dens) + 0.3 * hist_vols).to(X.device)
+    
+    # Node-specific deltas: high-density commercial hubs get higher delta (up to 5.0) to prioritize spike magnitudes
+    node_deltas = (1.0 + 4.0 * (corp_dens + trans_dens)).to(X.device)
     
     # 4. Training Loop
     print("Starting Model Training...")
@@ -325,10 +350,20 @@ def train_model(epochs=5, batch_size=8):
             
             optimizer.zero_grad()
             risk_pred = model(x_b, edge_index)
-            loss = criterion(risk_pred, y_risk_b)
+            # Map predictions and targets to raw violations scale [0, 20] to apply physical deltas
+            if log_transform:
+                risk_pred_raw = torch.expm1(risk_pred) * 20.0
+                y_risk_b_raw = torch.expm1(y_risk_b) * 20.0
+            else:
+                risk_pred_raw = risk_pred * 20.0
+                y_risk_b_raw = y_risk_b * 20.0
+            
+            # Use Weighted Huber Loss with node-specific deltas on raw violations scale
+            loss = weighted_huber_loss(risk_pred_raw, y_risk_b_raw, node_weights, deltas=node_deltas)
             loss.backward()
             optimizer.step()
             
+            # Track epoch loss on raw scale
             epoch_loss += loss.item() * len(batch_indices)
             
         avg_train_loss = epoch_loss / X_train.size(0)
@@ -346,7 +381,15 @@ def train_model(epochs=5, batch_size=8):
                     continue
                     
                 val_risk = model(x_val_b, edge_index)
-                loss_v = criterion(val_risk, y_risk_val_b)
+                # Map validation predictions and targets to raw violations scale [0, 20]
+                if log_transform:
+                    val_risk_raw = torch.expm1(val_risk) * 20.0
+                    y_risk_val_b_raw = torch.expm1(y_risk_val_b) * 20.0
+                else:
+                    val_risk_raw = val_risk * 20.0
+                    y_risk_val_b_raw = y_risk_val_b * 20.0
+                
+                loss_v = weighted_huber_loss(val_risk_raw, y_risk_val_b_raw, node_weights, deltas=node_deltas)
                 val_loss += loss_v.item() * len(x_val_b)
                 
         avg_val_loss = val_loss / X_val.size(0)
@@ -364,6 +407,6 @@ def train_model(epochs=5, batch_size=8):
     
     # 7. Run Inference to update graph nodes predicted risk
     run_inference_pipeline(model, xgb_model, X, edge_index, nodes_df, num_nodes, num_features)
-
+ 
 if __name__ == "__main__":
-    train_model(epochs=5, batch_size=8)
+    train_model(epochs=12, batch_size=8, log_transform=True)

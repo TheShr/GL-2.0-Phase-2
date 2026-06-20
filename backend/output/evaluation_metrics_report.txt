@@ -7,8 +7,8 @@ Train/Test Date Split : March 1, 2024
   Recall@10                         : 60%
 -------------------------------------------------------------------------
 2. VIOLATION FORECASTING METRICS (SHIFT-LEVEL ERROR)
-  Mean Absolute Error (MAE)         : 1.027 violations/shift/node
-  Root Mean Squared Error (RMSE)    : 6.228 violations/shift/node
+  Mean Absolute Error (MAE)         : 0.892 violations/shift/node
+  Root Mean Squared Error (RMSE)    : 6.201 violations/shift/node
 -------------------------------------------------------------------------
 3. ENFORCEMENT IMPACT METRICS
   Top-10 predicted patrol overlap   : 60%

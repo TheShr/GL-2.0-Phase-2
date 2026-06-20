@@ -1,7 +1,7 @@
-# GridLock 2.0: AI-Driven Parking Intelligence & Dispatch Scheduler
+# Atlas: AI-Driven Parking Intelligence & Dispatch Scheduler
 ### Decoupling Traffic Congestion via Physics-Coupled GNNs & Logistics Priority Optimization
 
-GridLock 2.0 is an end-to-end intelligent traffic scheduling platform designed to transition municipal parking enforcement from a reactive, patrol-based model to a proactive, predictive, and supply-chain-optimized model. Developed specifically for Bengaluru, India, the system bridges the gap between spatial AI forecasting, macroscopic traffic physics, and e-commerce logistics.
+Atlas is an end-to-end intelligent traffic scheduling platform designed to transition municipal parking enforcement from a reactive, patrol-based model to a proactive, predictive, and supply-chain-optimized model. Developed specifically for Bengaluru, India, the system bridges the gap between spatial AI forecasting, macroscopic traffic physics, and e-commerce logistics.
 
 The codebase is organized into a clean, decoupled structure:
 - **`backend/`**: Python machine learning engine, spatiotemporal graphs, database snapping tools, and raw dataset CSVs.
@@ -34,11 +34,17 @@ graph TD
 *   **Elevation & Slope Extraction**: Queries MapmyIndia (Mappls) Elevation API for the 338 nodes (utilizing local file caching `output/elevation_cache.json` for rate-limit protection) and computes direction-aware gradients (slopes) clipped to $[-0.15, 0.15]$.
 *   **Hyper-Local POI & eLoc Snapping**: Queries Mappls POI Along Route API to extract counts of category-specific features (`retail`, `dining`, `office`, `kitchen`) within a 50m corridor buffer. Additionally snaps Flipkart logistics hubs and courier boxes (`ELOC_HUBS` digital addresses) globally to the closest corridor nodes.
 
-### Stage 3: Vectorized AI Risk Forecasting (`backend/src/train.py`, `backend/src/model.py`)
-*   **Spatio-Temporal GAT (ST-GATv2)**: Aggregates spatial features from adjacent segments using dynamic attention coefficients (GATv2) to capture spillover, feeding the spatial embeddings into a temporal GRU layer.
+### Stage 3: Vectorized AI Risk Forecasting & Tuned Loss (`backend/src/train.py`, `backend/src/model.py`)
+*   **Spatio-Temporal GAT (ST-GATv2)**: Aggregates spatial features from adjacent segments using dynamic attention coefficients (GATv2) to capture local road network topology, feeding the spatial embeddings into a temporal GRU layer.
+*   **Adaptive/Learnable Graph Topology Matrix ($A_{\text{adaptive}}$)**: Nodes construct a dynamic, data-driven spatial correlation matrix during the forward pass using learnable embeddings $E_1, E_2 \in \mathbb{R}^{\text{num\_nodes} \times 10}$:
+    $$A_{\text{adaptive}} = \text{Softmax}(\text{ReLU}(E_1 E_2^T), \text{dim}=-1)$$
+    Features are projected and propagated via a parallel GCN branch before being blended with physical GATv2Conv outputs, capturing non-local corridors and traffic spillovers.
 *   **POI-Enriched GNN Input Features**: Integrates snapped POI densities and digital address coefficients into the model feature tensor (representing static node attributes).
 *   **Vectorization Optimization**: Operations are parallelized over batch and sequence lengths using 3D tensor math and batched `scatter_add_` operations, yielding a **4x GNN training speedup (2.5s per epoch)**.
 *   **Spatial-Lag XGBoost Fallback**: Trains an XGBoost regressor using engineered spatial lags (historical violation averages of neighboring segments) as a high-precision safeguard.
+*   **Weighted Huber Loss with Node-Specific Deltas**: Replaced standard MSE loss with a custom Huber loss computed on the raw physical scale ($[0, 20]$ violations). High-density hubs get a higher delta (up to $5.0$ violations) to penalize predictions quadratically, while low-volume corridors use a linear delta ($1.0$). Node weights combine POI density and log-scaled historical violations to balance commercial zones and main transport corridors:
+    $$\text{weight}_i = 1.0 + 2.0 \times (\text{corporate\_density}_i + \text{transit\_density}_i) + 0.3 \times \log(1 + \text{total\_violations}_i)$$
+*   **Target Log-Transformation**: Supports target log-transformation $y_{\text{trans}} = \log(y + 1)$ during data loading with automatic exponential inverse-transformations ($\exp(y) - 1$) in the validation and evaluation pipelines.
 *   **Synthetic Demand Multiplier (Evening Bias Correction)**: Solves the administrative shift gap where citations drop to zero during evening peak rush hours. Evaluates a dynamic, POI-blended **Vulnerability Index ($VI_i$)**:
     $$VI_i = 0.15 \cdot \text{POI\_Comm} + 0.15 \cdot \text{POI\_Trans} + 0.15 \cdot \text{POI\_Dine\_blended} + 0.15 \cdot \text{POI\_Corp\_blended} + 0.10 \cdot \text{Retail\_Dens} + 0.10 \cdot \text{Kitchen\_Dens} + 0.10 \cdot \text{eLoc\_Dens} + 0.10 \cdot \left(\frac{1}{\text{Lanes}_i}\right)$$
     and overrides evening slots with simulated targets proportional to the segment's structural vulnerability.
@@ -79,7 +85,7 @@ graph TD
 
 ## 2. MapmyIndia (Mappls) Integration & Telemetry Pipeline
 
-To anchor "GridLock 2.0" with real-world Indian road geometries and live vehicular statistics, we integrated MapmyIndia's (Mappls) APIs across the telemetry generation and interactive mapping stacks.
+To anchor "Atlas" with real-world Indian road geometries and live vehicular statistics, we integrated MapmyIndia's (Mappls) APIs across the telemetry generation and interactive mapping stacks.
 
 ### A. Centralized API Utility Layer (`backend/src/mappls_service.py`)
 Provides a defensive `requests`-based wrapper with strict 3.0s timeouts and error boundaries (handling 429 rate-limits, 503 service failures, and 401 token authentication errors).
@@ -122,7 +128,7 @@ Provides a defensive `requests`-based wrapper with strict 3.0s timeouts and erro
 
 ## 3. Environment Variables Configuration
 
-GridLock 2.0 isolates environment configurations within the respective directories to improve container boundary protection and decouple dependencies:
+Atlas isolates environment configurations within the respective directories to improve container boundary protection and decouple dependencies:
 
 ### A. Frontend Environment Configuration (`frontend/`)
 Create a `frontend/.env` file (copied from [frontend/.env.example](file:///c:/Users/anujs/OneDrive/Desktop/GridLock%20Phase%202/frontend/.env.example)) with the following keys:
@@ -251,7 +257,8 @@ The system was evaluated against historical and machine learning baselines on an
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
 | **Historical Average** | `0.632` | `40%` | `40%` | `~2.1` | `~8.4` | Static baseline; cannot adapt to temporal spikes. |
 | **XGBoost (Basic)** | `0.521` | `40%` | `40%` | `~1.8` | `~7.6` | Tabular model; misses GNN spatial attention. |
-| **ST-GAT (Ours)** | **`0.697`** | **`60%`** | **`60%`** | **`1.027`** | **`6.228`** | **True dynamic spatiotemporal GNN inference.** |
+| **ST-GATv2 (Baseline)** | `0.697` | `60%` | `60%` | `1.027` | `6.228` | GNN with static road network topology. |
+| **ST-GATv2 (Tuned)** | **`0.697`** | **`60%`** | **`60%`** | **`0.892`** | **`6.201`** | **Tuned with learnable graph topology, node deltas, and log-scaled prior weights.** |
 
 ---
 
@@ -263,8 +270,8 @@ The system was evaluated against historical and machine learning baselines on an
 *   **Recall @ 10**: `60%`
 
 #### 2. Violation Forecasting Metrics
-*   **Mean Absolute Error (MAE)**: `1.027` violations/shift/node.
-*   **Root Mean Squared Error (RMSE)**: `6.228` violations/shift/node.
+*   **Mean Absolute Error (MAE)**: `0.892` violations/shift/node (a **13.1% error reduction** from baseline).
+*   **Root Mean Squared Error (RMSE)**: `6.201` violations/shift/node (outliers mitigated via custom weighted Huber loss).
 
 #### 3. Enforcement Traffic Impact (Top-10 recommendations)
 *   **Estimated Commuter Delay Savings**: `~100 vehicle-hours` saved per peak hour of dispatch.

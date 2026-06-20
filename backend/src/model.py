@@ -78,17 +78,27 @@ class STGATModel(nn.Module):
     Spatio-Temporal Graph Attention Network.
     Processes sequence data: [batch_size, seq_len, num_nodes, num_features]
     """
-    def __init__(self, num_nodes, in_features, spatial_hidden, temporal_hidden, dropout=0.2):
+    def __init__(self, num_nodes, in_features, spatial_hidden, temporal_hidden, dropout=0.2, log_transform=False):
         super(STGATModel, self).__init__()
         self.num_nodes = num_nodes
         self.spatial_hidden = spatial_hidden
         self.temporal_hidden = temporal_hidden
+        self.log_transform = log_transform
         
-        # Spatial Graph Attention Layer
+        # Spatial Graph Attention Layer (for static physical topology)
         self.gat = GATv2Layer(in_features, spatial_hidden, dropout=dropout)
         
+        # Learnable node embeddings for adaptive/dynamic topology matrix
+        self.E1 = nn.Parameter(torch.empty(num_nodes, 10))
+        self.E2 = nn.Parameter(torch.empty(num_nodes, 10))
+        nn.init.xavier_uniform_(self.E1)
+        nn.init.xavier_uniform_(self.E2)
+        
+        # Parallel projection branch for learning dynamic spatiotemporal dependencies
+        self.adaptive_conv = nn.Linear(in_features, spatial_hidden)
+        
         # Temporal Gated Recurrent Unit (GRU) Layer
-        # Input to GRU is the spatial embedding output of the GAT layer
+        # Input to GRU is the blended spatial embedding output of GAT and adaptive conv layers
         self.gru = nn.GRU(spatial_hidden, temporal_hidden, batch_first=True)
         
         # Prediction Head
@@ -99,36 +109,69 @@ class STGATModel(nn.Module):
         x_seq: Tensor of shape [batch_size, seq_len, num_nodes, in_features]
         edge_index: Tensor of shape [2, num_edges]
         """
+        # Shape verification / Assertions
+        assert len(x_seq.shape) == 4, f"Expected 4D input tensor [Batch, Time, Nodes, Features], got shape {x_seq.shape}"
+        assert x_seq.shape[2] == self.num_nodes, f"Input node count {x_seq.shape[2]} does not match model node count {self.num_nodes}"
+        
         batch_size, seq_len, num_nodes, num_features = x_seq.size()
         
         # Flatten spatial-temporal sequence to process spatial layers in parallel
         # Shape: [batch_size * seq_len, num_nodes, num_features]
         x_flat = x_seq.view(batch_size * seq_len, num_nodes, num_features)
+        assert x_flat.shape == (batch_size * seq_len, num_nodes, num_features), f"Flat shape mismatch, got {x_flat.shape}"
         
-        # Run GAT layer in parallel across all sequences and batches
-        # spatial_out shape: [batch_size * seq_len, num_nodes, spatial_hidden]
-        spatial_out = self.gat(x_flat, edge_index)
+        # 1. Physical Spatial branch: Run GATv2 layer processing static road network topology
+        # spatial_out_gat shape: [batch_size * seq_len, num_nodes, spatial_hidden]
+        spatial_out_gat = self.gat(x_flat, edge_index)
+        assert spatial_out_gat.shape == (batch_size * seq_len, num_nodes, self.spatial_hidden), f"GAT output shape mismatch, got {spatial_out_gat.shape}"
+        
+        # 2. Adaptive Spatial branch: Learn dynamic spatiotemporal dependencies
+        # Compute A_adaptive = Softmax(ReLU(E_1 @ E_2.T), dim=-1)
+        # Shape: [num_nodes, num_nodes]
+        A_adaptive = F.softmax(F.relu(torch.matmul(self.E1, self.E2.t())), dim=-1)
+        assert A_adaptive.shape == (num_nodes, num_nodes), f"A_adaptive shape mismatch, got {A_adaptive.shape}"
+        
+        # Project node features to hidden space
+        # Shape: [batch_size * seq_len, num_nodes, spatial_hidden]
+        h_adaptive = self.adaptive_conv(x_flat)
+        assert h_adaptive.shape == (batch_size * seq_len, num_nodes, self.spatial_hidden), f"Adaptive project shape mismatch, got {h_adaptive.shape}"
+        
+        # Propagate using A_adaptive: A_adaptive @ h_adaptive (fully vectorized batch multiplication)
+        # Shape: [batch_size * seq_len, num_nodes, spatial_hidden]
+        spatial_out_adaptive = torch.matmul(A_adaptive, h_adaptive)
+        assert spatial_out_adaptive.shape == (batch_size * seq_len, num_nodes, self.spatial_hidden), f"Adaptive conv shape mismatch, got {spatial_out_adaptive.shape}"
+        
+        # 3. Blend local physical topology representation and non-local adaptive spatiotemporal correlations
+        # Shape: [batch_size * seq_len, num_nodes, spatial_hidden]
+        spatial_out = spatial_out_gat + spatial_out_adaptive
+        assert spatial_out.shape == (batch_size * seq_len, num_nodes, self.spatial_hidden), f"Blended output shape mismatch, got {spatial_out.shape}"
         
         # Reshape to separate sequence: [batch_size, seq_len, num_nodes, spatial_hidden]
         spatial_out = spatial_out.view(batch_size, seq_len, num_nodes, self.spatial_hidden)
+        assert spatial_out.shape == (batch_size, seq_len, num_nodes, self.spatial_hidden), f"Reshaped spatial output shape mismatch, got {spatial_out.shape}"
         
         # Permute to feed into GRU per node
         # We process each node's sequence through GRU
         # Shape for GRU input: [batch_size * num_nodes, seq_len, spatial_hidden]
         gru_in = spatial_out.permute(0, 2, 1, 3).reshape(batch_size * num_nodes, seq_len, self.spatial_hidden)
+        assert gru_in.shape == (batch_size * num_nodes, seq_len, self.spatial_hidden), f"GRU input shape mismatch, got {gru_in.shape}"
         
         # GRU forward
         # gru_out shape: [batch_size * num_nodes, seq_len, temporal_hidden]
         gru_out, h_n = self.gru(gru_in)
+        assert gru_out.shape == (batch_size * num_nodes, seq_len, self.gru.hidden_size), f"GRU output shape mismatch, got {gru_out.shape}"
         
         # We take the final time step hidden state for forecasting: [batch_size * num_nodes, temporal_hidden]
         h_last = h_n.squeeze(0)
+        assert h_last.shape == (batch_size * num_nodes, self.gru.hidden_size), f"GRU final state shape mismatch, got {h_last.shape}"
         
         # Predict violation risk index (sigmoid limits to [0, 1])
         risk_pred = torch.sigmoid(self.risk_head(h_last))
+        assert risk_pred.shape == (batch_size * num_nodes, 1), f"Prediction shape mismatch, got {risk_pred.shape}"
         
         # Reshape outputs to [batch_size, num_nodes]
         risk_pred = risk_pred.view(batch_size, num_nodes)
+        assert risk_pred.shape == (batch_size, num_nodes), f"Reshaped prediction shape mismatch, got {risk_pred.shape}"
         
         return risk_pred
 

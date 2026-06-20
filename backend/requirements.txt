@@ -1,0 +1,11 @@
+numpy>=1.22.0
+pandas>=1.4.0
+torch>=1.11.0
+xgboost>=1.6.0
+scipy>=1.8.0
+scikit-learn>=1.0.0
+requests>=2.27.0
+python-dotenv>=0.20.0
+fastapi>=0.80.0
+uvicorn>=0.17.0
+apscheduler>=3.9.0

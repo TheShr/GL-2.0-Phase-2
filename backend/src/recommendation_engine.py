@@ -291,7 +291,7 @@ def generate_enforcement_recommendations(clusters_csv_path, output_dir="output")
     
     report = []
     report.append("=========================================================================")
-    report.append("                 GRIDLOCK 2.0 TIERED ENFORCEMENT DISPATCH SCHEDULE")
+    report.append("                      ATLAS TIERED ENFORCEMENT DISPATCH SCHEDULE")
     report.append("=========================================================================\n")
     report.append(f"Analyzing {len(recs_df)} high-density illegal parking hotspots in Bengaluru.")
     report.append("Traffic Simulation Baseline: Greenshields Speed-Density CTM Pipeline\n")

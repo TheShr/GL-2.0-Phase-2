@@ -173,9 +173,18 @@ const colorRamps = {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !focus) return;
-    const target = rawHotspots.find((h) => String(h.cluster_id) === focus);
-    if (target && target.lat != null && target.lon != null) {
-      map.setView([target.lat, target.lon], 13.5, { animate: true });
+    if (focus.includes(",")) {
+      const [latStr, lonStr] = focus.split(",");
+      const lat = parseFloat(latStr);
+      const lon = parseFloat(lonStr);
+      if (!isNaN(lat) && !isNaN(lon)) {
+        map.setView([lat, lon], 14, { animate: true });
+      }
+    } else {
+      const target = rawHotspots.find((h) => String(h.cluster_id) === focus);
+      if (target && target.lat != null && target.lon != null) {
+        map.setView([target.lat, target.lon], 13.5, { animate: true });
+      }
     }
   }, [focus, rawHotspots]);
 

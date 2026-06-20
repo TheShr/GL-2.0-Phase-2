@@ -33,11 +33,11 @@ export const Route = createFileRoute("/api/autosuggest")({
         } catch (err: any) {
           console.error("Autosuggest proxy failed: ", err);
           const mockSuggestions = [
-            { placeName: "Silk Board Junction", placeAddress: "Outer Ring Road, Bengaluru", latitude: 12.9176, longitude: 77.6225 },
-            { placeName: "Koramangala Wipro Park", placeAddress: "80 Feet Road, Koramangala, Bengaluru", latitude: 12.9344, longitude: 77.6242 },
-            { placeName: "Varthur Road Hub", placeAddress: "Varthur Road, Whitefield, Bengaluru", latitude: 12.9550, longitude: 77.7470 },
-            { placeName: "Hebbal Flyover", placeAddress: "Bellary Road, Hebbal, Bengaluru", latitude: 13.0350, longitude: 77.5970 },
-            { placeName: "Old Airport Road Junction", placeAddress: "HAL Old Airport Road, Bengaluru", latitude: 12.9602, longitude: 77.6791 }
+            { placeName: "Silk Board Junction", placeAddress: "Outer Ring Road, Bengaluru", latitude: 12.9176, longitude: 77.6225, eLoc: "mock-silk" },
+            { placeName: "Koramangala Wipro Park", placeAddress: "80 Feet Road, Koramangala, Bengaluru", latitude: 12.9344, longitude: 77.6242, eLoc: "mock-wipro" },
+            { placeName: "Varthur Road Hub", placeAddress: "Varthur Road, Whitefield, Bengaluru", latitude: 12.9550, longitude: 77.7470, eLoc: "mock-varthur" },
+            { placeName: "Hebbal Flyover", placeAddress: "Bellary Road, Hebbal, Bengaluru", latitude: 13.0350, longitude: 77.5970, eLoc: "mock-hebbal" },
+            { placeName: "Old Airport Road Junction", placeAddress: "HAL Old Airport Road, Bengaluru", latitude: 12.9602, longitude: 77.6791, eLoc: "mock-airport" }
           ];
           const { searchParams } = new URL(request.url);
           const q = searchParams.get("query") || "";

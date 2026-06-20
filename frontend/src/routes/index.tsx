@@ -34,6 +34,14 @@ function CommandCenter() {
   const { mapFocus, setMapFocus } = useApp();
   const { summary, hotspots: mappedHotspots, rawHotspots, rawRoutes, isLoading, error, refresh } = useTelemetry();
   const navigate = useNavigate();
+
+  const focusCoords = mapFocus && mapFocus.includes(",") ? (() => {
+    const parts = mapFocus.split(",");
+    const lat = parseFloat(parts[0]);
+    const lng = parseFloat(parts[1]);
+    const name = parts.slice(2).join(",") || "Searched Location";
+    return { lat, lng, name };
+  })() : null;
   
   const [layers, setLayers] = useState<Record<string, boolean>>(
     Object.fromEntries(MAP_LAYERS.map((l) => [l, l === "Flipkart Logistics Hubs"])),
@@ -113,7 +121,8 @@ function CommandCenter() {
       }>
         <MapContainer
           hotspots={rawHotspots}
-          selectedId={mapFocus ? parseInt(mapFocus, 10) : null}
+          selectedId={mapFocus && !mapFocus.includes(",") ? parseInt(mapFocus, 10) : null}
+          focusCoords={focusCoords}
           onSelectHotspot={(h) => {
             setMapFocus(String(h.cluster_id));
             setDrawer(mappedHotspots.find(mh => mh.id === String(h.cluster_id)) || null);

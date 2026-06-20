@@ -56,6 +56,7 @@ interface MapContainerProps {
   onSelectHotspot: (hotspot: Hotspot) => void;
   routes?: RouteData[];
   visibleLayers?: Record<string, boolean>;
+  focusCoords?: { lat: number; lng: number; name: string } | null;
 }
 
 function getTierStyle(score: number) {
@@ -92,10 +93,14 @@ function getHotspotCircleCenter(h: Hotspot) {
   return { lat: h.lat, lng: h.lon };
 }
 
-export default function MapContainer({ hotspots, selectedId, onSelectHotspot, routes, visibleLayers }: MapContainerProps) {
+export default function MapContainer({ hotspots, selectedId, onSelectHotspot, routes, visibleLayers, focusCoords }: MapContainerProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const onSelectHotspotRef = useRef(onSelectHotspot);
+
+  const leafletSearchMarkerRef = useRef<L.Marker | null>(null);
+  const mapplsSearchMarkerRef = useRef<any | null>(null);
+  const mapplsSearchInfoWindowRef = useRef<any | null>(null);
 
   useEffect(() => {
     onSelectHotspotRef.current = onSelectHotspot;
@@ -128,6 +133,177 @@ export default function MapContainer({ hotspots, selectedId, onSelectHotspot, ro
   const [sdkLoaded, setSdkLoaded] = useState(false);
   const [fallbackToLeaflet, setFallbackToLeaflet] = useState(false);
   const [judgeMode, setJudgeMode] = useState(false);
+
+  // Render search focus marker and pan to it
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    // Clean up old markers first
+    if (leafletSearchMarkerRef.current) {
+      leafletSearchMarkerRef.current.remove();
+      leafletSearchMarkerRef.current = null;
+    }
+    if (mapplsSearchMarkerRef.current) {
+      try {
+        if (mapplsSearchMarkerRef.current.remove) {
+          mapplsSearchMarkerRef.current.remove();
+        } else {
+          const Mappls = (window as any).Mappls || (window as any).mappls;
+          Mappls.remove({ map, layer: mapplsSearchMarkerRef.current });
+        }
+      } catch (err) {}
+      mapplsSearchMarkerRef.current = null;
+    }
+    if (mapplsSearchInfoWindowRef.current) {
+      try { mapplsSearchInfoWindowRef.current.close(); } catch (err) {}
+      mapplsSearchInfoWindowRef.current = null;
+    }
+
+    if (!focusCoords) return;
+
+    const { lat, lng, name } = focusCoords;
+    if (lat == null || lng == null || isNaN(lat) || isNaN(lng)) return;
+
+    const popupHtml = `
+      <div style="font-family:'Inter',sans-serif; padding:12px; min-width:200px; color:#1E293B;">
+        <div style="display:inline-block; padding:3px 7px; background:#4a7ab5; color:#F1F5F9; font-size:7px; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; border-radius:9999px; margin-bottom:6px;">
+          Searched Location
+        </div>
+        <div style="font-size:12px; font-weight:800; color:#0F172A; margin-bottom:4px; line-height:1.35;">
+          ${name}
+        </div>
+        <div style="font-size:9px; color:#64748B;">
+          Coordinates: ${lat.toFixed(5)}, ${lng.toFixed(5)}
+        </div>
+      </div>
+    `;
+
+    if (fallbackToLeaflet) {
+      if (!leafletInstance) return;
+      const searchIcon = leafletInstance.divIcon({
+        className: "",
+        html: `
+          <div style="display:flex; flex-direction:column; align-items:center; width:82px;">
+            <div style="position:relative; width:26px; height:26px;">
+              <div class="pulse-ring-cyan" style="position:absolute; inset:0; border-radius:50%;"></div>
+              <div style="
+                position:absolute; inset:0; border-radius:50%;
+                background:var(--signal);
+                display:flex; align-items:center; justify-content:center;
+                color:#fff;
+                border:2px solid #ffffff;
+                box-shadow:0 3px 10px rgba(0,0,0,0.22);
+                padding: 4px;
+              ">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%;">
+                  <circle cx="12" cy="12" r="10"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </div>
+            </div>
+            <div style="
+              margin-top:4px;
+              background:rgba(255,255,255,0.9);
+              backdrop-filter:blur(12px);
+              border:1px solid rgba(255,255,255,0.60);
+              border-radius:6px;
+              padding:2px 6px;
+              font-family:'Inter',sans-serif;
+              font-size:8px;
+              font-weight:700;
+              color:#1e293b;
+              white-space:nowrap;
+              max-width:80px;
+              overflow:hidden;
+              text-overflow:ellipsis;
+              box-shadow:0 2px 8px rgba(0,0,0,0.1);
+              text-transform:uppercase;
+            ">${name}</div>
+          </div>
+        `,
+        iconSize: [82, 44],
+        iconAnchor: [41, 13],
+      });
+
+      const marker = leafletInstance.marker([lat, lng], { icon: searchIcon }).addTo(map);
+      marker.bindPopup(popupHtml, { closeButton: false }).openPopup();
+      leafletSearchMarkerRef.current = marker;
+
+      map.setView([lat, lng], 15, { animate: true, duration: 0.7 });
+    } else if (sdkLoaded) {
+      const Mappls = (window as any).Mappls || (window as any).mappls;
+      if (!Mappls) return;
+
+      try {
+        const marker = new Mappls.Marker({
+          map: map,
+          position: { lat, lng },
+          html: `
+            <div style="display:flex; flex-direction:column; align-items:center; width:82px;">
+              <div style="position:relative; width:26px; height:26px;">
+                <div class="pulse-ring-cyan" style="position:absolute; inset:0; border-radius:50%;"></div>
+                <div style="
+                  position:absolute; inset:0; border-radius:50%;
+                  background:var(--signal);
+                  display:flex; align-items:center; justify-content:center;
+                  color:#fff;
+                  border:2px solid #ffffff;
+                  box-shadow:0 3px 10px rgba(0,0,0,0.22);
+                  padding: 4px;
+                ">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%;">
+                    <circle cx="12" cy="12" r="10"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </div>
+              </div>
+              <div style="
+                margin-top:4px;
+                background:rgba(255,255,255,0.9);
+                backdrop-filter:blur(12px);
+                border:1px solid rgba(255,255,255,0.60);
+                border-radius:6px;
+                padding:2px 6px;
+                font-family:'Inter',sans-serif;
+                font-size:8px;
+                font-weight:700;
+                color:#1e293b;
+                white-space:nowrap;
+                max-width:80px;
+                overflow:hidden;
+                text-overflow:ellipsis;
+                box-shadow:0 2px 8px rgba(0,0,0,0.1);
+                text-transform:uppercase;
+              ">${name}</div>
+            </div>
+          `
+        });
+        mapplsSearchMarkerRef.current = marker;
+
+        const infoWindow = new Mappls.InfoWindow({
+          map: map,
+          position: { lat, lng },
+          content: popupHtml,
+          maxWidth: 250,
+          closeButton: true
+        });
+        infoWindow.open(map);
+        mapplsSearchInfoWindowRef.current = infoWindow;
+
+        if (typeof map.panTo === "function") {
+          map.panTo({ lat, lng });
+        } else if (typeof map.setCenter === "function") {
+          map.setCenter({ lat, lng });
+        }
+        if (typeof map.setZoom === "function") {
+          map.setZoom(15);
+        }
+      } catch (err) {
+        console.error("[MapContainer] Failed to place search marker: ", err);
+      }
+    }
+  }, [focusCoords, sdkLoaded, fallbackToLeaflet, leafletInstance]);
 
   const [trafficEnabled, setTrafficEnabled] = useState(false);
   const [trafficFreeFlowEnabled, setTrafficFreeFlowEnabled] = useState(true);

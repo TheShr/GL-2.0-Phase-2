@@ -74,6 +74,19 @@ function mapActualToMockHotspot(h: any): MappedHotspot {
 
   const delayEst = Math.round(parseFloat(h.travel_time_before || "0"));
 
+  // Real GNN feature contribution breakdown based on priority score formulation:
+  const risk_comp = (h.predicted_risk_index || 0) * 30.0;
+  const lpi_val = h.logistics_penalty_index || 0.0;
+  const logi_comp = Math.min(1.0, lpi_val / 0.45) * 30.0;
+  const delay_hours = h.total_commuter_time_saved_hours || 0.0;
+  const delay_comp = Math.min(1.0, delay_hours / 1500.0) * 40.0;
+
+  const total_comp = (risk_comp + logi_comp + delay_comp) || 1.0;
+
+  const risk_pct = Math.round((risk_comp / total_comp) * 100);
+  const delay_pct = Math.round((delay_comp / total_comp) * 100);
+  const logi_pct = Math.max(0, 100 - risk_pct - delay_pct);
+
   return {
     id: String(h.cluster_id),
     name: `${h.police_station} Junction`,
@@ -91,9 +104,9 @@ function mapActualToMockHotspot(h: any): MappedHotspot {
     timeWindow: h.target_shift || "08:00 – 12:00",
     delayDelta: Math.round(parseFloat(h.delay_savings_per_vehicle || "0")),
     factors: [
-      { label: "Historical Violations", weight: Math.round((h.predicted_risk_index || 0) * 45) },
-      { label: "Transit Density", weight: Math.round((h.capacity_reduction_rcf || 0) * 35) },
-      { label: "Commercial Profile", weight: Math.round((h.logistics_weight || 0) * 10) }
+      { label: "Historical Violations", weight: risk_pct },
+      { label: "Transit Density", weight: delay_pct },
+      { label: "Commercial Profile", weight: logi_pct }
     ],
     flipkart_impact: h.flipkart_impact
   };

@@ -222,6 +222,13 @@ export const Route = createFileRoute("/api/data")({
           const avgCapacityRecovered = scheduleList.slice(0, 10).reduce((sum, s) => sum + s.capacity_reduction_rcf, 0) / Math.min(10, totalHotspots || 1) * 100;
           const totalSavings = scheduleList.reduce((sum, s) => sum + s.total_commuter_time_saved_hours, 0);
 
+          // Calculate Flipkart SLA breaches avoided dynamically
+          const totalSlaBreaches = scheduleList.reduce((sum, s) => {
+            const breaches = Math.round(s.total_commuter_time_saved_hours * 1.4 * s.logistics_weight);
+            return sum + breaches;
+          }, 0);
+          const totalCostSavings = totalSlaBreaches * 250.0;
+
           const fallbackRoutes = [
             {
               name: "Whitefield Hub ➔ Koramangala Hub (Route 1)",
@@ -272,6 +279,10 @@ export const Route = createFileRoute("/api/data")({
               total_violations: totalViolations,
               avg_capacity_recovered: Math.round(avgCapacityRecovered),
               total_savings: Math.round(totalSavings),
+              flipkart_impact: {
+                sla_breaches_avoided: totalSlaBreaches,
+                cost_savings_inr: totalCostSavings
+              }
             },
             hotspots: scheduleList,
             routes: fallbackRoutes,

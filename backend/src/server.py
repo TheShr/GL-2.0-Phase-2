@@ -28,14 +28,21 @@ def run_gnn_pipeline():
     except Exception as e:
         print("[Scheduler] GNN pipeline execution failed: ", str(e))
 
-# Setup background scheduler to retrain GNN model and update schedules every 12 hours
-scheduler = BackgroundScheduler()
-scheduler.add_job(run_gnn_pipeline, 'interval', hours=12)
-scheduler.start()
+# Setup background scheduler to retrain GNN model and update schedules every 12 hours (unless disabled)
+disable_retraining = os.environ.get("DISABLE_RETRAINING", "false").lower() in ("true", "1", "yes")
+
+scheduler = None
+if not disable_retraining:
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(run_gnn_pipeline, 'interval', hours=12)
+    scheduler.start()
+    print("[Startup] Background GNN retraining scheduler started.")
+else:
+    print("[Startup] Background GNN retraining scheduler is disabled.")
 
 @app.get("/healthz")
 def health_check():
-    return {"status": "healthy", "scheduler_active": scheduler.running}
+    return {"status": "healthy", "scheduler_active": scheduler.running if scheduler else False}
 
 # Mount output/ directory to serve generated JSON/CSV files statically
 os.makedirs("output", exist_ok=True)
@@ -43,9 +50,9 @@ app.mount("/static", StaticFiles(directory="output"), name="static")
 
 if __name__ == "__main__":
     import uvicorn
-    # Execute the GNN pipeline on startup to ensure output files are fresh and present
-    print("[Startup] Running initial GNN pipeline training...")
-    run_gnn_pipeline()
+    # We do NOT run GNN retraining synchronously on startup to prevent Uvicorn port binding timeouts 
+    # and OOM crashes on hosting environments with low memory caps (like Render's 512MB limit).
+    # Pre-computed model predictions are served statically from the backend/output/ folder.
     
     port = int(os.environ.get("PORT", 8000))
     print(f"[Startup] Launching FastAPI server on port {port}...")

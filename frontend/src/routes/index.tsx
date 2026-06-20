@@ -124,6 +124,14 @@ function CommandCenter() {
             routes: layers["Flipkart Logistics Hubs"],
             patrols: true,
             congestion: true,
+            commercialDensity: layers["Commercial Density"],
+            transitDensity: layers["Transit Density"],
+            diningDensity: layers["Dining Density"],
+            corporateDensity: layers["Corporate Density"],
+            roadCapacity: layers["Road Capacity"],
+            vulnerabilityIndex: layers["Vulnerability Index"],
+            flipkartLogisticsHubs: layers["Flipkart Logistics Hubs"],
+            elevationSlope: layers["Elevation / Slope"],
           }}
         />
       </Suspense>

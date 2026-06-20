@@ -35,6 +35,13 @@ interface Hotspot {
   nearest_landmark?: string;
   directed_side?: string;
   upstream_edges?: { lat: number; lng: number }[][];
+  commercial_density?: number;
+  transit_density?: number;
+  dining_density?: number;
+  corporate_density?: number;
+  vulnerability_index?: number;
+  elevation?: number;
+  slope?: number;
 }
 
 interface RouteData {
@@ -771,7 +778,101 @@ export default function MapContainer({ hotspots, selectedId, onSelectHotspot, ro
         if (showMarkers) {
           marker.addTo(layerGroup);
         }
+
+        // Checklist active layer effects (Leaflet fallback)
+        if (visibleLayers?.commercialDensity && h.commercial_density && h.commercial_density > 0) {
+          leafletInstance.circle([h.lat, h.lon], {
+            color: "#D97706",
+            fillColor: "#D97706",
+            fillOpacity: 0.08,
+            weight: 1.5,
+            dashArray: "3, 6",
+            radius: h.commercial_density * 350,
+          }).addTo(layerGroup).bindTooltip(`Commercial Profile: ${(h.commercial_density * 100).toFixed(1)}%`);
+        }
+        if (visibleLayers?.transitDensity && h.transit_density && h.transit_density > 0) {
+          leafletInstance.circle([h.lat, h.lon], {
+            color: "#2563EB",
+            fillColor: "#2563EB",
+            fillOpacity: 0.08,
+            weight: 1.5,
+            dashArray: "3, 6",
+            radius: h.transit_density * 350,
+          }).addTo(layerGroup).bindTooltip(`Transit Density: ${(h.transit_density * 100).toFixed(1)}%`);
+        }
+        if (visibleLayers?.diningDensity && h.dining_density && h.dining_density > 0) {
+          leafletInstance.circle([h.lat, h.lon], {
+            color: "#EC4899",
+            fillColor: "#EC4899",
+            fillOpacity: 0.08,
+            weight: 1.5,
+            dashArray: "3, 6",
+            radius: h.dining_density * 350,
+          }).addTo(layerGroup).bindTooltip(`Dining Proximity: ${(h.dining_density * 100).toFixed(1)}%`);
+        }
+        if (visibleLayers?.corporateDensity && h.corporate_density && h.corporate_density > 0) {
+          leafletInstance.circle([h.lat, h.lon], {
+            color: "#06B6D4",
+            fillColor: "#06B6D4",
+            fillOpacity: 0.08,
+            weight: 1.5,
+            dashArray: "3, 6",
+            radius: h.corporate_density * 350,
+          }).addTo(layerGroup).bindTooltip(`Corporate Density: ${(h.corporate_density * 100).toFixed(1)}%`);
+        }
+        if (visibleLayers?.roadCapacity) {
+          leafletInstance.circle([h.lat, h.lon], {
+            color: "#10B981",
+            fillColor: "#10B981",
+            fillOpacity: 0.15,
+            weight: 2,
+            radius: h.lanes * 60,
+          }).addTo(layerGroup).bindTooltip(`Road Width: ${h.lanes} Lanes (${h.road_class})`);
+        }
+        if (visibleLayers?.vulnerabilityIndex && h.vulnerability_index) {
+          leafletInstance.circle([h.lat, h.lon], {
+            color: "#EF4444",
+            fillColor: "#EF4444",
+            fillOpacity: h.vulnerability_index * 0.25,
+            weight: 2,
+            radius: h.vulnerability_index * 250,
+          }).addTo(layerGroup).bindTooltip(`Vulnerability Index: ${(h.vulnerability_index * 100).toFixed(1)}%`);
+        }
+        if (visibleLayers?.elevationSlope && h.elevation) {
+          leafletInstance.circle([h.lat, h.lon], {
+            color: "#6366F1",
+            fillColor: "#6366F1",
+            fillOpacity: 0.20,
+            weight: 2,
+            radius: 120,
+          }).addTo(layerGroup).bindTooltip(`Altitude: ${h.elevation.toFixed(0)}m, Slope: ${((h.slope || 0) * 100).toFixed(2)}%`);
+        }
       });
+
+      // Render Flipkart Logistics Hubs (Leaflet fallback)
+      if (visibleLayers?.flipkartLogisticsHubs) {
+        const hubs = [
+          { name: "Whitefield Logistics Hub", lat: 12.969, lon: 77.750 },
+          { name: "Koramangala Logistics Hub", lat: 12.934, lon: 77.624 },
+          { name: "Electronic City Gateway", lat: 12.845, lon: 77.663 },
+          { name: "Majestic Dispatch Terminal", lat: 12.978, lon: 77.571 },
+          { name: "Hebbal Logistics Hub", lat: 13.035, lon: 77.597 },
+          { name: "Indiranagar Hub", lat: 12.978, lon: 77.641 }
+        ];
+        hubs.forEach((hub) => {
+          const hubIcon = leafletInstance.divIcon({
+            className: "",
+            html: `
+              <div style="background:#F2C94C; border:2px solid #000; color:#000; border-radius:4px; padding:3px 6px; font-weight:800; font-size:8px; white-space:nowrap; box-shadow:0 2px 6px rgba(0,0,0,0.3)">
+                📦 ${hub.name}
+              </div>
+            `,
+            iconSize: [80, 20],
+            iconAnchor: [40, 10]
+          });
+          leafletInstance.marker([hub.lat, hub.lon], { icon: hubIcon }).addTo(layerGroup);
+        });
+      }
       return;
     }
 
@@ -1000,10 +1101,133 @@ export default function MapContainer({ hotspots, selectedId, onSelectHotspot, ro
 
               markersRef.current.push(marker);
             }
+
+            // Checklist active layer effects (Mappls SDK)
+            if (visibleLayers?.commercialDensity && h.commercial_density && h.commercial_density > 0) {
+              const commercialCircle = new Mappls.Circle({
+                map: map,
+                center: { lat: h.lat, lng: h.lon },
+                radius: h.commercial_density * 350,
+                fillColor: "#D97706",
+                fillOpacity: 0.08,
+                strokeColor: "#D97706",
+                strokeOpacity: 0.5,
+                strokeWeight: 1.5,
+                dashArray: "3, 6"
+              });
+              circlesRef.current.push(commercialCircle);
+            }
+            if (visibleLayers?.transitDensity && h.transit_density && h.transit_density > 0) {
+              const transitCircle = new Mappls.Circle({
+                map: map,
+                center: { lat: h.lat, lng: h.lon },
+                radius: h.transit_density * 350,
+                fillColor: "#2563EB",
+                fillOpacity: 0.08,
+                strokeColor: "#2563EB",
+                strokeOpacity: 0.5,
+                strokeWeight: 1.5,
+                dashArray: "3, 6"
+              });
+              circlesRef.current.push(transitCircle);
+            }
+            if (visibleLayers?.diningDensity && h.dining_density && h.dining_density > 0) {
+              const diningCircle = new Mappls.Circle({
+                map: map,
+                center: { lat: h.lat, lng: h.lon },
+                radius: h.dining_density * 350,
+                fillColor: "#EC4899",
+                fillOpacity: 0.08,
+                strokeColor: "#EC4899",
+                strokeOpacity: 0.5,
+                strokeWeight: 1.5,
+                dashArray: "3, 6"
+              });
+              circlesRef.current.push(diningCircle);
+            }
+            if (visibleLayers?.corporateDensity && h.corporate_density && h.corporate_density > 0) {
+              const corpCircle = new Mappls.Circle({
+                map: map,
+                center: { lat: h.lat, lng: h.lon },
+                radius: h.corporate_density * 350,
+                fillColor: "#06B6D4",
+                fillOpacity: 0.08,
+                strokeColor: "#06B6D4",
+                strokeOpacity: 0.5,
+                strokeWeight: 1.5,
+                dashArray: "3, 6"
+              });
+              circlesRef.current.push(corpCircle);
+            }
+            if (visibleLayers?.roadCapacity) {
+              const capCircle = new Mappls.Circle({
+                map: map,
+                center: { lat: h.lat, lng: h.lon },
+                radius: h.lanes * 60,
+                fillColor: "#10B981",
+                fillOpacity: 0.15,
+                strokeColor: "#10B981",
+                strokeOpacity: 0.6,
+                strokeWeight: 2
+              });
+              circlesRef.current.push(capCircle);
+            }
+            if (visibleLayers?.vulnerabilityIndex && h.vulnerability_index) {
+              const vulnCircle = new Mappls.Circle({
+                map: map,
+                center: { lat: h.lat, lng: h.lon },
+                radius: h.vulnerability_index * 250,
+                fillColor: "#EF4444",
+                fillOpacity: h.vulnerability_index * 0.25,
+                strokeColor: "#EF4444",
+                strokeOpacity: 0.7,
+                strokeWeight: 2
+              });
+              circlesRef.current.push(vulnCircle);
+            }
+            if (visibleLayers?.elevationSlope && h.elevation) {
+              const elevCircle = new Mappls.Circle({
+                map: map,
+                center: { lat: h.lat, lng: h.lon },
+                radius: 120,
+                fillColor: "#6366F1",
+                fillOpacity: 0.20,
+                strokeColor: "#6366F1",
+                strokeOpacity: 0.8,
+                strokeWeight: 2
+              });
+              circlesRef.current.push(elevCircle);
+            }
           } catch (err) {
             console.error("[Mappls SDK] Failed to render hotspot marker: ", h.cluster_id, err);
           }
         });
+
+        // Render Flipkart Logistics Hubs (Mappls SDK)
+        if (visibleLayers?.flipkartLogisticsHubs) {
+          const hubs = [
+            { name: "Whitefield Logistics Hub", lat: 12.969, lon: 77.750 },
+            { name: "Koramangala Logistics Hub", lat: 12.934, lon: 77.624 },
+            { name: "Electronic City Gateway", lat: 12.845, lon: 77.663 },
+            { name: "Majestic Dispatch Terminal", lat: 12.978, lon: 77.571 },
+            { name: "Hebbal Logistics Hub", lat: 13.035, lon: 77.597 },
+            { name: "Indiranagar Hub", lat: 12.978, lon: 77.641 }
+          ];
+          hubs.forEach((hub) => {
+            try {
+              const hubMarker = new Mappls.Marker({
+                map: map,
+                position: { lat: hub.lat, lng: hub.lon },
+                html: `
+                  <div style="background:#F2C94C; border:2px solid #000; color:#000; border-radius:4px; padding:3px 6px; font-weight:800; font-size:8px; white-space:nowrap; box-shadow:0 2px 6px rgba(0,0,0,0.3)">
+                    📦 ${hub.name}
+                  </div>
+                `
+              });
+              markersRef.current.push(hubMarker);
+            } catch (err) { }
+          });
+        }
       }
     }
   }, [hotspots, selectedId, sdkLoaded, fallbackToLeaflet, judgeMode, activeRoutes, mapInstance, visibleLayers, leafletInstance]);

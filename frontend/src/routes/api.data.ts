@@ -205,6 +205,13 @@ export const Route = createFileRoute("/api/data")({
               enforcement_action: row.enforcement_action || "Tow units + double-parking citation",
               directed_side: "left",
               upstream_edges: upstreamFallbackMap[stationName] || [],
+              commercial_density: parseFloat(row.commercial_density || "0.0"),
+              transit_density: parseFloat(row.transit_density || "0.0"),
+              dining_density: parseFloat(row.dining_density || "0.0"),
+              corporate_density: parseFloat(row.corporate_density || "0.0"),
+              vulnerability_index: parseFloat(row.vulnerability_index || "1.0"),
+              elevation: parseFloat(row.elevation || "900.0"),
+              slope: parseFloat(row.slope || "0.0"),
             });
           }
 

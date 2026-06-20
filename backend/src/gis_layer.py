@@ -45,6 +45,11 @@ def analyze_spatial_hotspots(nodes_csv_path, output_dir="output"):
         avg_vi = float(c_nodes['vulnerability_index'].mean()) if 'vulnerability_index' in c_nodes.columns else 1.0
         avg_risk = float(c_nodes['predicted_risk'].mean()) if 'predicted_risk' in c_nodes.columns else 1.0
         avg_slope = float(c_nodes['slope'].abs().mean()) if 'slope' in c_nodes.columns else 0.0
+        avg_comm = float(c_nodes['commercial_density'].mean()) if 'commercial_density' in c_nodes.columns else 0.0
+        avg_trans = float(c_nodes['transit_density'].mean()) if 'transit_density' in c_nodes.columns else 0.0
+        avg_dining = float(c_nodes['dining_density'].mean()) if 'dining_density' in c_nodes.columns else 0.0
+        avg_corp = float(c_nodes['corporate_density'].mean()) if 'corporate_density' in c_nodes.columns else 0.0
+        avg_elev = float(c_nodes['elevation'].mean()) if 'elevation' in c_nodes.columns else 900.0
         
         clusters_summary.append({
             'cluster_id': int(cid),
@@ -58,7 +63,12 @@ def analyze_spatial_hotspots(nodes_csv_path, output_dir="output"):
             'lanes': dom_lanes,
             'vulnerability_index': avg_vi,
             'predicted_risk': avg_risk,
-            'slope': avg_slope
+            'slope': avg_slope,
+            'commercial_density': avg_comm,
+            'transit_density': avg_trans,
+            'dining_density': avg_dining,
+            'corporate_density': avg_corp,
+            'elevation': avg_elev
         })
 
     clusters_df = pd.DataFrame(clusters_summary)

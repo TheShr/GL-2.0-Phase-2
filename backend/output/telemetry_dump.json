@@ -4,126 +4,30 @@
       "total_hotspots": 7,
       "total_violations": 114506,
       "avg_capacity_recovered": 5,
-      "total_savings": 118,
+      "total_savings": 1408,
       "flipkart_impact": {
-        "sla_breaches_avoided": 356,
-        "cost_savings_inr": 89000.0
+        "sla_breaches_avoided": 5774,
+        "cost_savings_inr": 1443500.0
       }
     },
     "hotspots": [
       {
         "rank": 1,
-        "cluster_id": 3,
-        "police_station": "Upparpet",
-        "road_class": "MG Road Central Commercial",
-        "lanes": 3,
-        "lat": 12.9715,
-        "lon": 77.5735,
-        "predicted_risk_index": 0.6628,
-        "capacity_reduction_rcf": 0.07125106048990618,
-        "logistics_weight": 3.0,
-        "logistics_penalty_index": 0.21375318146971853,
-        "travel_time_before": "4.3",
-        "travel_time_after": "1.7",
-        "delay_savings_per_vehicle": "2.6",
-        "total_commuter_time_saved_hours": 68.05348656788134,
-        "priority_score": 35.9489717397914,
-        "target_shift": "Morning Rush (08:00 - 12:00 IST)",
-        "enforcement_action": "Tow trucks + double-parking citations",
-        "nearest_landmark": "1st Cross Road, Sowrashtrapete, Chickpete, Bengaluru, Karnataka. Pin-560053 (India)",
-        "directed_side": "left",
-        "upstream_edges": [
-          [
-            {
-              "lat": 12.978,
-              "lng": 77.571
-            },
-            {
-              "lat": 12.975,
-              "lng": 77.607
-            }
-          ],
-          [
-            {
-              "lat": 12.965,
-              "lng": 77.576
-            },
-            {
-              "lat": 12.978,
-              "lng": 77.571
-            }
-          ]
-        ],
-        "flipkart_impact": {
-          "sla_breaches_avoided": 286,
-          "cost_savings_inr": 71500.0
-        }
-      },
-      {
-        "rank": 2,
-        "cluster_id": 6,
-        "police_station": "Bellandur",
-        "road_class": "Sarjapur Road",
-        "lanes": 2,
-        "lat": 12.913933333333334,
-        "lon": 77.67886666666666,
-        "predicted_risk_index": 0.1098473783333333,
-        "capacity_reduction_rcf": 0.018305243070571655,
-        "logistics_weight": 3.0,
-        "logistics_penalty_index": 0.05491572921171496,
-        "travel_time_before": "3.0",
-        "travel_time_after": "3.0",
-        "delay_savings_per_vehicle": "0.0",
-        "total_commuter_time_saved_hours": 0.0,
-        "priority_score": 6.95646996411433,
-        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
-        "enforcement_action": "Wheel clamping + lane clearance",
-        "nearest_landmark": "Sarjapura Main Road, Venkataramanappa Reddy Layout, Kaikondrahalli, Bengaluru, Karnataka. Pin-560035 (India)",
-        "directed_side": "left",
-        "upstream_edges": [
-          [
-            {
-              "lat": 12.93,
-              "lng": 77.68
-            },
-            {
-              "lat": 12.914,
-              "lng": 77.678
-            }
-          ],
-          [
-            {
-              "lat": 12.92,
-              "lng": 77.67
-            },
-            {
-              "lat": 12.93,
-              "lng": 77.68
-            }
-          ]
-        ],
-        "flipkart_impact": {
-          "sla_breaches_avoided": 0,
-          "cost_savings_inr": 0.0
-        }
-      },
-      {
-        "rank": 3,
         "cluster_id": 2,
         "police_station": "HSR Layout",
         "road_class": "Hosur Road NH 44",
         "lanes": 4,
         "lat": 12.898,
         "lon": 77.63,
-        "predicted_risk_index": 0.0945538067777777,
-        "capacity_reduction_rcf": 0.008196709873268392,
+        "predicted_risk_index": 0.1004314386666666,
+        "capacity_reduction_rcf": 0.008706231858441552,
         "logistics_weight": 3.0,
-        "logistics_penalty_index": 0.024590129619805175,
+        "logistics_penalty_index": 0.3724759811266256,
         "travel_time_before": "1.9",
         "travel_time_after": "1.9",
-        "delay_savings_per_vehicle": "0.0",
-        "total_commuter_time_saved_hours": 0.3518416497549537,
-        "priority_score": 4.485338621980475,
+        "delay_savings_per_vehicle": "8.3",
+        "total_commuter_time_saved_hours": 538.020861627348,
+        "priority_score": 42.19189821183765,
         "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
         "enforcement_action": "Wheel clamping + lane clearance",
         "nearest_landmark": "7th Main Road, Hongasandra, Bengaluru, Karnataka. Pin-560068 (India)",
@@ -150,9 +54,126 @@
             }
           ]
         ],
+        "vulnerability_index": 0.1225918044934368,
+        "slope": 0.0,
+        "commercial_density": 0.0220162329215255,
+        "transit_density": 0.014584757550907,
+        "dining_density": 0.0312597502955674,
+        "corporate_density": 0.0252378471299758,
+        "elevation": 900.0,
         "flipkart_impact": {
-          "sla_breaches_avoided": 1,
-          "cost_savings_inr": 250.0
+          "sla_breaches_avoided": 2260,
+          "cost_savings_inr": 565000.0
+        }
+      },
+      {
+        "rank": 2,
+        "cluster_id": 3,
+        "police_station": "Upparpet",
+        "road_class": "MG Road Central Commercial",
+        "lanes": 3,
+        "lat": 12.9715,
+        "lon": 77.5735,
+        "predicted_risk_index": 0.712188495,
+        "capacity_reduction_rcf": 0.07656032820980725,
+        "logistics_weight": 3.0,
+        "logistics_penalty_index": 0.22968098462942177,
+        "travel_time_before": "4.5",
+        "travel_time_after": "1.7",
+        "delay_savings_per_vehicle": "2.8",
+        "total_commuter_time_saved_hours": 72.70121970731287,
+        "priority_score": 38.61641968415647,
+        "target_shift": "Morning Rush (08:00 - 12:00 IST)",
+        "enforcement_action": "Tow trucks + double-parking citations",
+        "nearest_landmark": "1st Cross Road, Sowrashtrapete, Chickpete, Bengaluru, Karnataka. Pin-560053 (India)",
+        "directed_side": "left",
+        "upstream_edges": [
+          [
+            {
+              "lat": 12.978,
+              "lng": 77.571
+            },
+            {
+              "lat": 12.975,
+              "lng": 77.607
+            }
+          ],
+          [
+            {
+              "lat": 12.965,
+              "lng": 77.576
+            },
+            {
+              "lat": 12.978,
+              "lng": 77.571
+            }
+          ]
+        ],
+        "vulnerability_index": 0.866658559922201,
+        "slope": 0.0,
+        "commercial_density": 0.8512216112749899,
+        "transit_density": 0.8483022824161269,
+        "dining_density": 0.5769090442832099,
+        "corporate_density": 0.3650369303473293,
+        "elevation": 900.0,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 305,
+          "cost_savings_inr": 76250.0
+        }
+      },
+      {
+        "rank": 3,
+        "cluster_id": 6,
+        "police_station": "Bellandur",
+        "road_class": "Sarjapur Road",
+        "lanes": 2,
+        "lat": 12.913933333333334,
+        "lon": 77.67886666666666,
+        "predicted_risk_index": 0.1059098818333333,
+        "capacity_reduction_rcf": 0.0176490887625161,
+        "logistics_weight": 3.0,
+        "logistics_penalty_index": 0.2588721096391142,
+        "travel_time_before": "3.0",
+        "travel_time_after": "3.0",
+        "delay_savings_per_vehicle": "5.8",
+        "total_commuter_time_saved_hours": 373.92638058983164,
+        "priority_score": 30.406807246669793,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Sarjapura Main Road, Venkataramanappa Reddy Layout, Kaikondrahalli, Bengaluru, Karnataka. Pin-560035 (India)",
+        "directed_side": "left",
+        "upstream_edges": [
+          [
+            {
+              "lat": 12.93,
+              "lng": 77.68
+            },
+            {
+              "lat": 12.914,
+              "lng": 77.678
+            }
+          ],
+          [
+            {
+              "lat": 12.92,
+              "lng": 77.67
+            },
+            {
+              "lat": 12.93,
+              "lng": 77.68
+            }
+          ]
+        ],
+        "vulnerability_index": 0.1286864831638736,
+        "slope": 0.0,
+        "commercial_density": 9.239147429470485e-05,
+        "transit_density": 6.106122066264072e-05,
+        "dining_density": 0.0001311404110215,
+        "corporate_density": 0.000105632734998,
+        "elevation": 900.0,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 1570,
+          "cost_savings_inr": 392500.0
         }
       },
       {
@@ -163,15 +184,15 @@
         "lanes": 2,
         "lat": 12.93493956043956,
         "lon": 77.62677472527471,
-        "predicted_risk_index": 0.6394342371428572,
-        "capacity_reduction_rcf": 0.10312706006115825,
+        "predicted_risk_index": 0.6344203485714287,
+        "capacity_reduction_rcf": 0.10231842712001947,
         "logistics_weight": 1.0,
-        "logistics_penalty_index": 0.10312706006115825,
-        "travel_time_before": "4.8",
+        "logistics_penalty_index": 0.10231842712001947,
+        "travel_time_before": "4.7",
         "travel_time_after": "1.6",
         "delay_savings_per_vehicle": "3.1",
-        "total_commuter_time_saved_hours": 49.63301184984361,
-        "priority_score": 27.38171143435876,
+        "total_commuter_time_saved_hours": 49.1797852268212,
+        "priority_score": 27.165299871192726,
         "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
         "enforcement_action": "Wheel clamping + lane clearance",
         "nearest_landmark": "16th Main Road, Sony World Junction, Koramangala, Bengaluru, Karnataka. Pin-560034 (India)",
@@ -198,6 +219,13 @@
             }
           ]
         ],
+        "vulnerability_index": 0.8184383244291448,
+        "slope": 0.0,
+        "commercial_density": 0.6726600310765429,
+        "transit_density": 0.4444697377270984,
+        "dining_density": 0.9545757127541232,
+        "corporate_density": 0.7687707964273631,
+        "elevation": 900.0,
         "flipkart_impact": {
           "sla_breaches_avoided": 69,
           "cost_savings_inr": 17250.0
@@ -211,15 +239,15 @@
         "lanes": 3,
         "lat": 12.970499999999998,
         "lon": 77.5915,
-        "predicted_risk_index": 0.572364672,
-        "capacity_reduction_rcf": 0.04840231791773986,
+        "predicted_risk_index": 0.565169664,
+        "capacity_reduction_rcf": 0.04779386830218308,
         "logistics_weight": 1.0,
-        "logistics_penalty_index": 0.04840231791773986,
+        "logistics_penalty_index": 0.04779386830218308,
         "travel_time_before": "1.6",
         "travel_time_after": "1.6",
         "delay_savings_per_vehicle": "0.0",
-        "total_commuter_time_saved_hours": 0.08107166261006216,
-        "priority_score": 20.399923265518925,
+        "total_commuter_time_saved_hours": 0.0799943390356848,
+        "priority_score": 20.14348098918649,
         "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
         "enforcement_action": "Wheel clamping + lane clearance",
         "nearest_landmark": "Kasturba Road, Siddalingaiah Circle, Gandhi Nagar, Bengaluru, Karnataka. Pin-560001 (India)",
@@ -246,6 +274,13 @@
             }
           ]
         ],
+        "vulnerability_index": 0.7216694957076951,
+        "slope": 0.0,
+        "commercial_density": 0.7260974256469805,
+        "transit_density": 0.608291739365445,
+        "dining_density": 0.5460457741412795,
+        "corporate_density": 0.2549522703059194,
+        "elevation": 900.0,
         "flipkart_impact": {
           "sla_breaches_avoided": 0,
           "cost_savings_inr": 0.0
@@ -259,15 +294,15 @@
         "lanes": 3,
         "lat": 12.974375000000002,
         "lon": 77.62023863636364,
-        "predicted_risk_index": 0.41280847625,
-        "capacity_reduction_rcf": 0.04963368029182162,
+        "predicted_risk_index": 0.3946734175,
+        "capacity_reduction_rcf": 0.04745322674046143,
         "logistics_weight": 1.0,
-        "logistics_penalty_index": 0.04963368029182162,
+        "logistics_penalty_index": 0.04745322674046143,
         "travel_time_before": "1.6",
         "travel_time_after": "1.6",
         "delay_savings_per_vehicle": "0.0",
-        "total_commuter_time_saved_hours": 0.08325672271272992,
-        "priority_score": 15.695386486227115,
+        "total_commuter_time_saved_hours": 0.07939188142038682,
+        "priority_score": 15.005868091201972,
         "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
         "enforcement_action": "Wheel clamping + lane clearance",
         "nearest_landmark": "Murphy Road, Begum Mahal Junction, Halasuru, Bengaluru, Karnataka. Pin-560008 (India)",
@@ -294,6 +329,13 @@
             }
           ]
         ],
+        "vulnerability_index": 0.5039275453025963,
+        "slope": 0.0,
+        "commercial_density": 0.4648817051996786,
+        "transit_density": 0.2767892422310239,
+        "dining_density": 0.4830491693948069,
+        "corporate_density": 0.2560190187750112,
+        "elevation": 900.0,
         "flipkart_impact": {
           "sla_breaches_avoided": 0,
           "cost_savings_inr": 0.0
@@ -307,15 +349,15 @@
         "lanes": 2,
         "lat": 12.9191,
         "lon": 77.6712,
-        "predicted_risk_index": 0.0997926975,
-        "capacity_reduction_rcf": 0.0177121237987013,
+        "predicted_risk_index": 0.10298373975,
+        "capacity_reduction_rcf": 0.018278499262987014,
         "logistics_weight": 3.0,
-        "logistics_penalty_index": 0.0531363713961039,
+        "logistics_penalty_index": 0.2588721096391142,
         "travel_time_before": "3.0",
         "travel_time_after": "3.0",
-        "delay_savings_per_vehicle": "0.0",
-        "total_commuter_time_saved_hours": 0.0,
-        "priority_score": 6.53620568474026,
+        "delay_savings_per_vehicle": "5.8",
+        "total_commuter_time_saved_hours": 373.92638058983164,
+        "priority_score": 30.31902298416979,
         "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
         "enforcement_action": "Wheel clamping + lane clearance",
         "nearest_landmark": "Sarjapura Main Road, Ambience Diva, Bellandur, Bengaluru, Karnataka. Pin-560103 (India)",
@@ -342,9 +384,16 @@
             }
           ]
         ],
+        "vulnerability_index": 0.1223775743949048,
+        "slope": 0.0,
+        "commercial_density": 0.0009137586794183,
+        "transit_density": 0.0006032687877125,
+        "dining_density": 0.0012966726629361,
+        "corporate_density": 0.0010435041483378,
+        "elevation": 900.0,
         "flipkart_impact": {
-          "sla_breaches_avoided": 0,
-          "cost_savings_inr": 0.0
+          "sla_breaches_avoided": 1570,
+          "cost_savings_inr": 392500.0
         }
       }
     ],

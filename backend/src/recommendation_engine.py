@@ -203,7 +203,14 @@ def generate_enforcement_recommendations(clusters_csv_path, output_dir="output")
             'total_commuter_time_saved_hours': total_delay_savings_hours,
             'priority_score': priority_score,
             'target_shift': target_shift,
-            'enforcement_action': enforce_action
+            'enforcement_action': enforce_action,
+            'vulnerability_index': float(row['vulnerability_index']) if 'vulnerability_index' in df.columns else 1.0,
+            'slope': float(row['slope']) if 'slope' in df.columns else 0.0,
+            'commercial_density': float(row['commercial_density']) if 'commercial_density' in df.columns else 0.0,
+            'transit_density': float(row['transit_density']) if 'transit_density' in df.columns else 0.0,
+            'dining_density': float(row['dining_density']) if 'dining_density' in df.columns else 0.0,
+            'corporate_density': float(row['corporate_density']) if 'corporate_density' in df.columns else 0.0,
+            'elevation': float(row['elevation']) if 'elevation' in df.columns else 900.0,
         })
 
     recs_df = pd.DataFrame(recommendations)
@@ -401,6 +408,13 @@ def generate_enforcement_recommendations(clusters_csv_path, output_dir="output")
             "nearest_landmark": str(r['nearest_landmark']),
             "directed_side": "left",
             "upstream_edges": upstream_map.get(station_name, []),
+            "vulnerability_index": float(r['vulnerability_index']) if 'vulnerability_index' in recs_df.columns else 1.0,
+            "slope": float(r['slope']) if 'slope' in recs_df.columns else 0.0,
+            "commercial_density": float(r['commercial_density']) if 'commercial_density' in recs_df.columns else 0.0,
+            "transit_density": float(r['transit_density']) if 'transit_density' in recs_df.columns else 0.0,
+            "dining_density": float(r['dining_density']) if 'dining_density' in recs_df.columns else 0.0,
+            "corporate_density": float(r['corporate_density']) if 'corporate_density' in recs_df.columns else 0.0,
+            "elevation": float(r['elevation']) if 'elevation' in recs_df.columns else 900.0,
             "flipkart_impact": {
                 "sla_breaches_avoided": sla_breaches,
                 "cost_savings_inr": cost_savings

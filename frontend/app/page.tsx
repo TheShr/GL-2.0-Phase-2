@@ -114,6 +114,9 @@ export default function Home() {
       if (customEvent.detail && customEvent.detail.cluster_id !== undefined) {
         setSelectedId(customEvent.detail.cluster_id);
         setRightDrawerOpen(true);
+        if (window.innerWidth < 768) {
+          setLeftDrawerOpen(false);
+        }
       }
     };
 
@@ -144,6 +147,9 @@ export default function Home() {
   const handleSelectHotspot = useCallback((h: Hotspot) => {
     setSelectedId(h.cluster_id);
     setRightDrawerOpen(true);
+    if (window.innerWidth < 768) {
+      setLeftDrawerOpen(false);
+    }
   }, []);
 
   const handleToggleLayer = useCallback((layer: string) => {
@@ -177,10 +183,19 @@ export default function Home() {
     setSearchQuery("");
     setSearchResults([]);
     setRightDrawerOpen(true);
+    if (window.innerWidth < 768) {
+      setLeftDrawerOpen(false);
+    }
   }, []);
 
   const handleToggleLeftDrawer = useCallback(() => {
-    setLeftDrawerOpen(prev => !prev);
+    setLeftDrawerOpen(prev => {
+      const next = !prev;
+      if (next && window.innerWidth < 768) {
+        setRightDrawerOpen(false);
+      }
+      return next;
+    });
   }, []);
 
   const handleCloseLeftDrawer = useCallback(() => {

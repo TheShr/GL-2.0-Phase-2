@@ -14,7 +14,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <TopBar />
       <LeftRail />
       <CommandK />
-      <main className="absolute top-12 left-16 right-0 bottom-0">
+      <main className="absolute top-12 left-0 md:left-16 right-0 bottom-16 md:bottom-0">
         {isCommand ? (
           <div className="h-full w-full">{children}</div>
         ) : (

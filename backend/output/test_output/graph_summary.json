@@ -16,8 +16,8 @@
       "road_importance": 1.8,
       "elevation": 910.1932390784839,
       "slope": 0.0,
-      "retail_count": 0,
-      "dining_count": 1,
+      "retail_count": 1,
+      "dining_count": 0,
       "office_count": 0,
       "kitchen_count": 0,
       "eloc_count": 0,
@@ -27,12 +27,12 @@
       "police_station": "Vijayanagara",
       "commercial_density": 1.0,
       "transit_density": 1.0,
-      "retail_density": 0.0,
+      "retail_density": 0.5,
       "kitchen_density": 0.0,
       "eloc_density": 0.0,
-      "dining_density": 0.5880765330043393,
+      "dining_density": 0.33807653300433926,
       "corporate_density": 0.21526741924914886,
-      "vulnerability_index": 0.8395387434364889
+      "vulnerability_index": 0.9130254045586137
     },
     {
       "node_id": "node_mg_road_central_commercial_7",
@@ -48,7 +48,7 @@
       "elevation": 891.4099765322401,
       "slope": -0.019228914604687793,
       "retail_count": 0,
-      "dining_count": 0,
+      "dining_count": 1,
       "office_count": 0,
       "kitchen_count": 0,
       "eloc_count": 0,
@@ -61,9 +61,9 @@
       "retail_density": 0.0,
       "kitchen_density": 0.0,
       "eloc_density": 0.0,
-      "dining_density": 0.20592818655627873,
+      "dining_density": 0.45592818655627876,
       "corporate_density": 0.12923848890146045,
-      "vulnerability_index": 0.5132307924886618
+      "vulnerability_index": 0.6105088117219326
     },
     {
       "node_id": "node_outer_ring_road_orr_0",
@@ -94,7 +94,7 @@
       "eloc_density": 1.0,
       "dining_density": 0.19887723866435764,
       "corporate_density": 0.25015991761293394,
-      "vulnerability_index": 0.6818375784100443
+      "vulnerability_index": 0.7215365225875877
     },
     {
       "node_id": "node_mg_road_central_commercial_1",
@@ -109,7 +109,7 @@
       "road_importance": 1.8,
       "elevation": 909.3797449953759,
       "slope": -0.0036832279258442505,
-      "retail_count": 1,
+      "retail_count": 0,
       "dining_count": 0,
       "office_count": 0,
       "kitchen_count": 0,
@@ -120,7 +120,7 @@
       "police_station": "Upparpet",
       "commercial_density": 0.9931300780887684,
       "transit_density": 0.9921065742038824,
-      "retail_density": 0.3333333333333333,
+      "retail_density": 0.0,
       "kitchen_density": 0.0,
       "eloc_density": 1.0,
       "dining_density": 0.33598803616060213,
@@ -156,7 +156,7 @@
       "eloc_density": 0.0,
       "dining_density": 1.0991058364292718e-05,
       "corporate_density": 7.707011090358831e-06,
-      "vulnerability_index": 0.10000253741114173
+      "vulnerability_index": 0.10000271053942876
     },
     {
       "node_id": "node_mg_road_central_commercial_2",
@@ -172,7 +172,7 @@
       "elevation": 907.8648766157511,
       "slope": -0.006858815123124268,
       "retail_count": 0,
-      "dining_count": 1,
+      "dining_count": 0,
       "office_count": 0,
       "kitchen_count": 0,
       "eloc_count": 0,
@@ -185,9 +185,9 @@
       "retail_density": 0.0,
       "kitchen_density": 0.0,
       "eloc_density": 0.0,
-      "dining_density": 0.5767905306547507,
+      "dining_density": 0.32679053065475067,
       "corporate_density": 0.20728098983783988,
-      "vulnerability_index": 0.8160516409800024
+      "vulnerability_index": 0.7958248847632264
     },
     {
       "node_id": "node_mg_road_central_commercial_23",
@@ -218,7 +218,7 @@
       "eloc_density": 0.0,
       "dining_density": 0.28393896263087626,
       "corporate_density": 0.11530776910440776,
-      "vulnerability_index": 0.5312093153932883
+      "vulnerability_index": 0.5606308501580481
     },
     {
       "node_id": "node_mg_road_central_commercial_24",
@@ -233,10 +233,10 @@
       "road_importance": 1.8,
       "elevation": 950.3165649635941,
       "slope": 0.00951606193035134,
-      "retail_count": 2,
+      "retail_count": 0,
       "dining_count": 0,
       "office_count": 0,
-      "kitchen_count": 2,
+      "kitchen_count": 0,
       "eloc_count": 0,
       "total_violations": 225,
       "weighted_capacity_reduction": 67.2,
@@ -244,12 +244,12 @@
       "police_station": "Shivajinagar",
       "commercial_density": 0.6312059341792984,
       "transit_density": 0.45928031315879925,
-      "retail_density": 0.6666666666666666,
-      "kitchen_density": 0.6666666666666666,
+      "retail_density": 0.0,
+      "kitchen_density": 0.0,
       "eloc_density": 0.0,
       "dining_density": 0.2615834969864236,
       "corporate_density": 0.10828536247280997,
-      "vulnerability_index": 0.7220709565966479
+      "vulnerability_index": 0.5188860073161119
     },
     {
       "node_id": "node_mg_road_central_commercial_22",
@@ -280,7 +280,7 @@
       "eloc_density": 0.0,
       "dining_density": 0.2935647568721265,
       "corporate_density": 0.11848068187654578,
-      "vulnerability_index": 0.5506790796533125
+      "vulnerability_index": 0.5814290419950963
     },
     {
       "node_id": "node_mg_road_central_commercial_4",
@@ -296,8 +296,8 @@
       "elevation": 902.873750196664,
       "slope": -0.012707391956024492,
       "retail_count": 0,
-      "dining_count": 1,
-      "office_count": 0,
+      "dining_count": 0,
+      "office_count": 1,
       "kitchen_count": 0,
       "eloc_count": 0,
       "total_violations": 121,
@@ -309,9 +309,9 @@
       "retail_density": 0.0,
       "kitchen_density": 0.0,
       "eloc_density": 0.0,
-      "dining_density": 0.5397903223654879,
-      "corporate_density": 0.1830627604622849,
-      "vulnerability_index": 0.7425709128815412
+      "dining_density": 0.28979032236548785,
+      "corporate_density": 0.43306276046228487,
+      "vulnerability_index": 0.7864137098186271
     }
   ]
 }

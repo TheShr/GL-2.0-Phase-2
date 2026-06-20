@@ -56,7 +56,7 @@ function Logistics() {
     <div className="space-y-4 max-w-4xl">
       <SectionHeader title="Logistics Intelligence" subtitle="What corridor enforcement means for delivery operations" />
 
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         {hubs.map((h) => (
           <button
             key={h.id}
@@ -70,7 +70,7 @@ function Logistics() {
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Card label="Logistics Priority Index" value={hub.priorityIndex} />
         <Card label="Est. Delivery Delay" value={`${hub.delay}m`} />
         <Card label="Hub Disruption Risk" value={`${hub.disruptionRisk}%`} crit={hub.disruptionRisk >= 80} />

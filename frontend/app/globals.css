@@ -926,3 +926,42 @@ input[type="range"].timeline-slider::-moz-range-thumb {
   font-weight: 700;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE OVERRIDES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@media (max-width: 767px) {
+  .drawer-left {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 0 !important;
+  }
+  .drawer-left .glass-panel {
+    border-radius: 0 !important;
+  }
+  
+  .drawer-right {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 0 !important;
+  }
+  .drawer-right .glass-panel {
+    border-radius: 0 !important;
+  }
+
+  .bottom-sheet {
+    left: 8px !important;
+    right: 8px !important;
+    bottom: 8px !important;
+  }
+}

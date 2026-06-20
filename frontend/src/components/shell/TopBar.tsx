@@ -32,9 +32,9 @@ export function TopBar() {
   }, [setCmdkOpen]);
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50 h-12 border-b border-hairline bg-surface flex items-center px-3 gap-4">
+    <header className="fixed top-0 inset-x-0 z-50 h-12 border-b border-hairline bg-surface flex items-center px-3 gap-2 sm:gap-4">
       {/* wordmark */}
-      <div className="flex items-center gap-2 w-48 shrink-0">
+      <div className="flex items-center gap-2 w-auto md:w-48 shrink-0">
         <span className="h-2 w-2 bg-signal" />
         <span className="wordmark text-xs">Atlas</span>
       </div>
@@ -56,15 +56,18 @@ export function TopBar() {
         </span>
       </div>
 
+      {/* spacer for mobile layout alignment */}
+      <div className="flex-1 md:hidden" />
+
       {/* right controls */}
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
         <button
           onClick={() => setCmdkOpen(true)}
-          className="flex items-center gap-2 border border-hairline px-2 py-1 text-[11px] text-text-muted hover:text-text-primary"
+          className="flex items-center gap-1.5 border border-hairline px-2 py-1 text-[11px] text-text-muted hover:text-text-primary"
         >
           <Search size={13} />
           <span className="hidden sm:inline">Search</span>
-          <kbd className="readout text-[9px] opacity-60">⌘K</kbd>
+          <kbd className="readout text-[9px] opacity-60 hidden sm:inline">⌘K</kbd>
         </button>
 
         <div className="flex border border-hairline">
@@ -86,7 +89,7 @@ export function TopBar() {
           {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
         </button>
 
-        <div className="flex items-center gap-2 border border-hairline px-2 py-1">
+        <div className="hidden sm:flex items-center gap-2 border border-hairline px-2 py-1">
           <span className="h-1.5 w-1.5 bg-signal" />
           <span className="text-[10px] uppercase tracking-wider text-text-muted">BTP · Cmd</span>
         </div>

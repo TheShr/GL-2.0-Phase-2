@@ -401,7 +401,7 @@ export default function MapContainer({ hotspots, selectedId, onSelectHotspot, ro
 
         const coords = json.routes?.[0]?.geometry?.coordinates;
         if (coords && Array.isArray(coords)) {
-          const latLngs = coords.map((pt: [number, number]) => [pt[1], pt[0]]);
+          const latLngs = coords.map((pt: [number, number]) => [pt[1], pt[0]] as [number, number]);
           const polyline = LInstance.polyline(latLngs, {
             color: route.color || "#3b82f6",
             weight: 4,
@@ -415,7 +415,7 @@ export default function MapContainer({ hotspots, selectedId, onSelectHotspot, ro
       } catch (err) {
         console.error(`[MapContainer] Failed OSRM route fetch for ${route.name}:`, err);
         // Fallback to straight line segments
-        const latLngs = route.coords.map(c => [c.lat, c.lng]);
+        const latLngs = route.coords.map(c => [c.lat, c.lng] as [number, number]);
         const polyline = LInstance.polyline(latLngs, {
           color: route.color || "#3b82f6",
           weight: 3,

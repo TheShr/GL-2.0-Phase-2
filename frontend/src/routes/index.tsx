@@ -40,6 +40,7 @@ function CommandCenter() {
   );
   const [clear, setClear] = useState(false);
   const [drawer, setDrawer] = useState<MappedHotspot | null>(null);
+  const [mobileActivePanel, setMobileActivePanel] = useState<"brief" | "layers" | "hotspots" | "none">("brief");
 
   if (isLoading) {
     return (
@@ -127,10 +128,33 @@ function CommandCenter() {
         />
       </Suspense>
 
+      {/* Floating Panel Toggles for Mobile viewports */}
+      {!clear && (
+        <div className="absolute top-3 left-3 right-3 z-[45] flex md:hidden gap-1.5 p-1 bg-surface/90 border border-hairline rounded glass">
+          {(["brief", "layers", "hotspots"] as const).map((panel) => (
+            <button
+              key={panel}
+              onClick={() => setMobileActivePanel(prev => prev === panel ? "none" : panel)}
+              className={cn(
+                "flex-1 py-1.5 text-[9px] uppercase tracking-wider font-semibold border-none cursor-pointer text-center rounded transition-all",
+                mobileActivePanel === panel
+                  ? "bg-signal text-white font-bold"
+                  : "text-text-muted hover:text-text-primary bg-transparent"
+              )}
+            >
+              {panel}
+            </button>
+          ))}
+        </div>
+      )}
+
       {!clear && (
         <>
           {/* top-left: executive brief */}
-          <div className="absolute top-3 left-3 w-[24%] min-w-[260px] glass p-4 space-y-4 z-[40]">
+          <div className={cn(
+            "absolute top-14 md:top-3 left-3 w-[calc(100%-24px)] md:w-[24%] md:min-w-[260px] glass p-4 space-y-4 z-[40]",
+            mobileActivePanel === "brief" ? "block md:block" : "hidden md:block"
+          )}>
             <div className="wordmark text-[10px] flex items-center gap-2">
               <Beacon severity="critical" /> Executive Brief
             </div>
@@ -172,7 +196,10 @@ function CommandCenter() {
           </div>
 
           {/* top-right: layers panel */}
-          <div className="absolute top-3 right-3 w-52 glass p-3 z-[40]">
+          <div className={cn(
+            "absolute top-14 md:top-3 right-3 w-[calc(100%-24px)] md:w-52 glass p-3 z-[40]",
+            mobileActivePanel === "layers" ? "block md:block" : "hidden md:block"
+          )}>
             <div className="wordmark text-[10px] mb-2">Layers</div>
             <div className="space-y-1.5">
               {MAP_LAYERS.map((l) => (
@@ -196,7 +223,10 @@ function CommandCenter() {
           </div>
 
           {/* bottom: hotspot intelligence strip */}
-          <div className="absolute bottom-0 inset-x-0 glass border-t border-hairline z-[40]">
+          <div className={cn(
+            "absolute bottom-20 md:bottom-0 inset-x-0 glass border-t border-hairline z-[40]",
+            mobileActivePanel === "hotspots" ? "block md:block" : "hidden md:block"
+          )}>
             <div className="flex items-center gap-2 px-3 pt-2">
               <span className="wordmark text-[10px]">Hotspot Intelligence</span>
             </div>
@@ -255,7 +285,7 @@ function CommandCenter() {
       {clear && (
         <button
           onClick={() => setClear(false)}
-          className="absolute top-3 right-3 glass px-3 py-1.5 text-[10px] uppercase tracking-wider text-text-primary cursor-pointer z-[40]"
+          className="absolute top-14 md:top-3 right-3 glass px-3 py-1.5 text-[10px] uppercase tracking-wider text-text-primary cursor-pointer z-[40]"
         >
           Restore Panels
         </button>
@@ -263,7 +293,7 @@ function CommandCenter() {
 
       {/* detail drawer (overlays, does not push map) */}
       {drawer && (
-        <div className="absolute top-0 right-0 bottom-0 w-80 glass border-l border-hairline p-4 overflow-y-auto z-[50]">
+        <div className="absolute top-0 right-0 bottom-16 md:bottom-0 w-full md:w-80 glass border-l border-hairline p-4 overflow-y-auto z-[50]">
           <div className="flex items-center justify-between">
             <span className="wordmark text-[10px]">Hotspot Detail</span>
             <button onClick={() => setDrawer(null)} className="text-text-muted hover:text-text-primary border-none bg-transparent cursor-pointer">

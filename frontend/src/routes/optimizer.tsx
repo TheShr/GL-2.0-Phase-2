@@ -60,7 +60,7 @@ function BeforeAfter() {
           className="absolute bottom-3 left-1/2 -translate-x-1/2 w-2/3 accent-signal"
         />
       </div>
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Delta label="Congestion" before="100%" after={`${100 - avgCapacityRecovered}%`} delta={`−${avgCapacityRecovered}%`} />
         <Delta label="Avg Delay" before="72m" after="49m" delta="−23m" />
         <Delta label="Total Savings" before="0h" after={`${totalSavings}h`} delta={`+${totalSavings}h`} />
@@ -189,7 +189,7 @@ function ScenarioBuilder() {
           </button>
         ))}
       </div>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Readout label="Adjusted City Risk" value={Math.round(76 * mult)} size="lg" critical={76 * mult > 90} />
         <Readout label="Adjusted Avg Delay" value={`${Math.round(49 * mult)}m`} size="lg" />
         <Readout label="Required Officers" value={Math.round(47 * mult)} size="lg" />

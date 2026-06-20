@@ -170,7 +170,7 @@ export default function CommandBar({
           onClick={() => { setLayersOpen(!layersOpen); setTimeOpen(false); setSettingsOpen(false); }}
         >
           <Layers className="h-3.5 w-3.5" />
-          <span>Layers</span>
+          <span className="hidden sm:inline">Layers</span>
           <ChevronDown className="h-3 w-3" />
         </button>
         {layersOpen && (
@@ -197,11 +197,11 @@ export default function CommandBar({
       {/* Simulate CTA */}
       <button
         onClick={onSimulateClick}
-        className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[10px] font-bold text-white cursor-pointer transition-all hover:opacity-90 active:scale-95 border-none"
+        className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-lg text-[10px] font-bold text-white cursor-pointer transition-all hover:opacity-90 active:scale-95 border-none"
         style={{ background: 'linear-gradient(135deg, #0077CC, #00A3FF)' }}
       >
         <Zap className="h-3 w-3" />
-        Simulate
+        <span className="hidden sm:inline">Simulate</span>
       </button>
 
       {/* Spacer */}

@@ -65,6 +65,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState("08:00");
   const [isDispatchPlanOpen, setIsDispatchPlanOpen] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
 
   // Drawer & Overlay UI States
   const [leftDrawerOpen, setLeftDrawerOpen] = useState(false);
@@ -109,6 +110,18 @@ export default function Home() {
   useEffect(() => {
     fetchData();
 
+    let observer: MutationObserver | null = null;
+    if (typeof window !== "undefined") {
+      const isDark = document.documentElement.classList.contains("dark");
+      setTheme(isDark ? "dark" : "light");
+      
+      observer = new MutationObserver(() => {
+        const darkActive = document.documentElement.classList.contains("dark");
+        setTheme(darkActive ? "dark" : "light");
+      });
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    }
+
     const handleSelectNode = (e: Event) => {
       const customEvent = e as CustomEvent;
       if (customEvent.detail && customEvent.detail.cluster_id !== undefined) {
@@ -141,6 +154,9 @@ export default function Home() {
       window.removeEventListener("select-hotspot-node", handleSelectNode);
       window.removeEventListener("open-dispatch-matrix", handleOpenDispatch);
       window.removeEventListener("simulation-update", handleSimulationUpdateGlobal);
+      if (observer) {
+        observer.disconnect();
+      }
     };
   }, []);
 
@@ -258,15 +274,13 @@ export default function Home() {
       <div className="h-screen w-screen flex flex-col items-center justify-center relative overflow-hidden">
         <div className="mesh-gradient-canvas" />
         <div className="relative z-10 glass-panel-heavy rounded-2xl p-10 flex flex-col items-center gap-6 max-w-sm w-full mx-4">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-12 w-12 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #0077CC, #00A3FF)', boxShadow: '0 8px 24px rgba(0,163,255,0.3)' }}>
-              <Shield className="h-6 w-6 text-white" />
-            </div>
-            <div className="flex flex-col items-center">
-              <span className="text-base font-bold text-slate-900 tracking-tight">GridLock 2.0</span>
-              <span className="text-[11px] text-slate-400 font-medium tracking-wider uppercase mt-0.5">Smart City Intelligence</span>
-            </div>
+          <div className="flex flex-col items-center gap-2">
+            <img
+              src={theme === "dark" ? "/logo-dark.png" : "/logo-light.png"}
+              alt="Atlas Logo"
+              className="h-10 w-auto object-contain"
+            />
+            <span className="text-[10px] text-slate-400 font-semibold tracking-widest uppercase mt-2">Smart City Intelligence</span>
           </div>
           <div className="w-full flex flex-col gap-2">
             <div className="loading-bar-track h-1.5 w-full">

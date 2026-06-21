@@ -1,17 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import fs from "fs";
 import path from "path";
-
-// Regex to split by commas not enclosed in double quotes (handles coordinates like "(lat, lon)" cleanly)
-const splitCsvLine = (line: string) => {
-  return line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(item => {
-    let clean = item.trim();
-    if (clean.startsWith('"') && clean.endsWith('"')) {
-      clean = clean.substring(1, clean.length - 1);
-    }
-    return clean;
-  });
-};
+import { splitCsvLine } from "@/lib/csv";
 
 function getBackendOutputDir() {
   if (process.env.BACKEND_OUTPUT_DIR) {

@@ -4,6 +4,7 @@ import { useState, lazy, Suspense } from "react";
 import { Beacon } from "@/components/hud";
 import { useApp } from "@/lib/app-context";
 import { useTelemetry, type MappedHotspot } from "@/lib/telemetry-context";
+import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { X, ArrowRight, Shield, AlertTriangle, RefreshCw } from "lucide-react";
 
@@ -31,6 +32,7 @@ const MAP_LAYERS = [
 ];
 
 function CommandCenter() {
+  const { theme } = useTheme();
   const { mapFocus, setMapFocus } = useApp();
   const { summary, hotspots: mappedHotspots, rawHotspots, rawRoutes, isLoading, error, refresh } = useTelemetry();
   const navigate = useNavigate();
@@ -54,15 +56,13 @@ function CommandCenter() {
     return (
       <div className="h-full w-full flex flex-col items-center justify-center relative overflow-hidden bg-canvas min-h-[400px]">
         <div className="relative z-10 rounded-2xl p-10 flex flex-col items-center gap-6 max-w-sm w-full mx-4 border border-hairline bg-surface">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-12 w-12 rounded-xl flex items-center justify-center bg-primary"
-              style={{ boxShadow: '0 8px 24px rgba(74, 122, 181, 0.3)' }}>
-              <Shield className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <div className="flex flex-col items-center">
-              <span className="text-base font-bold text-text-primary tracking-tight">Atlas</span>
-              <span className="text-[11px] text-text-muted font-medium tracking-wider uppercase mt-0.5">Smart City Intelligence</span>
-            </div>
+          <div className="flex flex-col items-center gap-2">
+            <img
+              src={theme === "dark" ? "/logo-dark.png" : "/logo-light.png"}
+              alt="Atlas Logo"
+              className="h-10 w-auto object-contain"
+            />
+            <span className="text-[10px] text-text-muted font-semibold tracking-widest uppercase mt-2">Smart City Intelligence</span>
           </div>
           <div className="w-full flex flex-col gap-2">
             <div className="loading-bar-track h-1.5 w-full">

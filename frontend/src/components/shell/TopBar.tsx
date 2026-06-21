@@ -26,7 +26,7 @@ function IstClock() {
 
 export function TopBar() {
   const { theme, toggle } = useTheme();
-  const { reportMode, setReportMode, setCmdkOpen } = useApp();
+    const { setCmdkOpen } = useApp();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -41,10 +41,12 @@ export function TopBar() {
 
   return (
     <header className="fixed top-0 inset-x-0 z-50 h-12 border-b border-hairline bg-surface flex items-center px-3 gap-2 sm:gap-4">
-      {/* wordmark */}
-      <div className="flex items-center gap-2 w-auto md:w-48 shrink-0">
-        <span className="h-2 w-2 bg-signal" />
-        <span className="wordmark text-xs font-bold uppercase tracking-wider">Atlas</span>
+      <div className="flex items-center w-auto md:w-48 shrink-0">
+        <img
+          src={theme === "dark" ? "/logo-dark.png" : "/logo-light.png"}
+          alt="Atlas Logo"
+          className="h-8 md:h-9 w-auto object-contain"
+        />
       </div>
 
       {/* spacer to push right controls to the far right */}
@@ -65,21 +67,6 @@ export function TopBar() {
           <span className="hidden sm:inline">Search</span>
           <kbd className="readout text-[9px] opacity-60 hidden sm:inline">⌘K</kbd>
         </button>
-
-        <div className="flex border border-hairline">
-          {(["priority", "audit"] as const).map((m) => (
-            <button
-              key={m}
-              onClick={() => setReportMode(m)}
-              className={cn(
-                "px-2 py-1 text-[10px] uppercase tracking-wider",
-                reportMode === m ? "bg-signal text-primary-foreground" : "text-text-muted",
-              )}
-            >
-              {m}
-            </button>
-          ))}
-        </div>
 
         <button onClick={toggle} className="border border-hairline p-1.5 text-text-muted hover:text-text-primary">
           {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}

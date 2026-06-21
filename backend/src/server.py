@@ -1,9 +1,11 @@
 import os
 import subprocess
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
 from apscheduler.schedulers.background import BackgroundScheduler
+from predict_service import predict_scenario
 
 app = FastAPI(title="Atlas GNN Backend Service")
 
@@ -15,6 +17,43 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+class PredictRequest(BaseModel):
+    node_id: str
+    hour: int
+    day_of_week: int
+    scooter_count: float = 0
+    car_count: float = 0
+    auto_count: float = 0
+    total_count: float | None = None
+    lanes_override: float | None = None
+
+@app.post("/predict")
+def predict(req: PredictRequest):
+    # Validate input ranges
+    if not (0 <= req.hour <= 23):
+        raise HTTPException(status_code=400, detail=f"Invalid hour '{req.hour}'. Must be between 0 and 23.")
+    if not (0 <= req.day_of_week <= 6):
+        raise HTTPException(status_code=400, detail=f"Invalid day_of_week '{req.day_of_week}'. Must be between 0 (Monday) and 6 (Sunday).")
+        
+    try:
+        results = predict_scenario(
+            node_id=req.node_id,
+            hour=req.hour,
+            day_of_week=req.day_of_week,
+            scooter_count=req.scooter_count,
+            car_count=req.car_count,
+            auto_count=req.auto_count,
+            total_count=req.total_count,
+            lanes_override=req.lanes_override
+        )
+        return results
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
 
 def run_gnn_pipeline():
     print("[Scheduler] Starting spatiotemporal GNN retraining and schedule updates...")

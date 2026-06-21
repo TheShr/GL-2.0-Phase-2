@@ -1,17 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import fs from "fs";
 import path from "path";
-
-// Helper to split CSV line, handling quoted columns
-const splitCsvLine = (line: string) => {
-  return line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(item => {
-    let clean = item.trim();
-    if (clean.startsWith('"') && clean.endsWith('"')) {
-      clean = clean.substring(1, clean.length - 1);
-    }
-    return clean;
-  });
-};
+import { splitCsvLine } from "@/lib/csv";
 
 function getRoadProfile(policeStation: string) {
   if (['HAL Old Airport', 'Hebbala', 'High ground', 'Chikkajala', 'HSR Layout', 'Bellandur'].includes(policeStation)) {

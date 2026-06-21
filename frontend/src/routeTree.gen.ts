@@ -19,7 +19,9 @@ import { Route as CopilotRouteImport } from './routes/copilot'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiSimulateRouteImport } from './routes/api.simulate'
 import { Route as ApiRouteGeometryRouteImport } from './routes/api.route-geometry'
+import { Route as ApiPredictRouteImport } from './routes/api.predict'
 import { Route as ApiPlaceDetailRouteImport } from './routes/api.place-detail'
+import { Route as ApiNodesRouteImport } from './routes/api.nodes'
 import { Route as ApiDataRouteImport } from './routes/api.data'
 import { Route as ApiCopilotRouteImport } from './routes/api.copilot'
 import { Route as ApiAutosuggestRouteImport } from './routes/api.autosuggest'
@@ -74,9 +76,19 @@ const ApiRouteGeometryRoute = ApiRouteGeometryRouteImport.update({
   path: '/api/route-geometry',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPredictRoute = ApiPredictRouteImport.update({
+  id: '/api/predict',
+  path: '/api/predict',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPlaceDetailRoute = ApiPlaceDetailRouteImport.update({
   id: '/api/place-detail',
   path: '/api/place-detail',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiNodesRoute = ApiNodesRouteImport.update({
+  id: '/api/nodes',
+  path: '/api/nodes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiDataRoute = ApiDataRouteImport.update({
@@ -107,7 +119,9 @@ export interface FileRoutesByFullPath {
   '/api/autosuggest': typeof ApiAutosuggestRoute
   '/api/copilot': typeof ApiCopilotRoute
   '/api/data': typeof ApiDataRoute
+  '/api/nodes': typeof ApiNodesRoute
   '/api/place-detail': typeof ApiPlaceDetailRoute
+  '/api/predict': typeof ApiPredictRoute
   '/api/route-geometry': typeof ApiRouteGeometryRoute
   '/api/simulate': typeof ApiSimulateRoute
 }
@@ -123,7 +137,9 @@ export interface FileRoutesByTo {
   '/api/autosuggest': typeof ApiAutosuggestRoute
   '/api/copilot': typeof ApiCopilotRoute
   '/api/data': typeof ApiDataRoute
+  '/api/nodes': typeof ApiNodesRoute
   '/api/place-detail': typeof ApiPlaceDetailRoute
+  '/api/predict': typeof ApiPredictRoute
   '/api/route-geometry': typeof ApiRouteGeometryRoute
   '/api/simulate': typeof ApiSimulateRoute
 }
@@ -140,7 +156,9 @@ export interface FileRoutesById {
   '/api/autosuggest': typeof ApiAutosuggestRoute
   '/api/copilot': typeof ApiCopilotRoute
   '/api/data': typeof ApiDataRoute
+  '/api/nodes': typeof ApiNodesRoute
   '/api/place-detail': typeof ApiPlaceDetailRoute
+  '/api/predict': typeof ApiPredictRoute
   '/api/route-geometry': typeof ApiRouteGeometryRoute
   '/api/simulate': typeof ApiSimulateRoute
 }
@@ -158,7 +176,9 @@ export interface FileRouteTypes {
     | '/api/autosuggest'
     | '/api/copilot'
     | '/api/data'
+    | '/api/nodes'
     | '/api/place-detail'
+    | '/api/predict'
     | '/api/route-geometry'
     | '/api/simulate'
   fileRoutesByTo: FileRoutesByTo
@@ -174,7 +194,9 @@ export interface FileRouteTypes {
     | '/api/autosuggest'
     | '/api/copilot'
     | '/api/data'
+    | '/api/nodes'
     | '/api/place-detail'
+    | '/api/predict'
     | '/api/route-geometry'
     | '/api/simulate'
   id:
@@ -190,7 +212,9 @@ export interface FileRouteTypes {
     | '/api/autosuggest'
     | '/api/copilot'
     | '/api/data'
+    | '/api/nodes'
     | '/api/place-detail'
+    | '/api/predict'
     | '/api/route-geometry'
     | '/api/simulate'
   fileRoutesById: FileRoutesById
@@ -207,7 +231,9 @@ export interface RootRouteChildren {
   ApiAutosuggestRoute: typeof ApiAutosuggestRoute
   ApiCopilotRoute: typeof ApiCopilotRoute
   ApiDataRoute: typeof ApiDataRoute
+  ApiNodesRoute: typeof ApiNodesRoute
   ApiPlaceDetailRoute: typeof ApiPlaceDetailRoute
+  ApiPredictRoute: typeof ApiPredictRoute
   ApiRouteGeometryRoute: typeof ApiRouteGeometryRoute
   ApiSimulateRoute: typeof ApiSimulateRoute
 }
@@ -284,11 +310,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRouteGeometryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/predict': {
+      id: '/api/predict'
+      path: '/api/predict'
+      fullPath: '/api/predict'
+      preLoaderRoute: typeof ApiPredictRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/place-detail': {
       id: '/api/place-detail'
       path: '/api/place-detail'
       fullPath: '/api/place-detail'
       preLoaderRoute: typeof ApiPlaceDetailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/nodes': {
+      id: '/api/nodes'
+      path: '/api/nodes'
+      fullPath: '/api/nodes'
+      preLoaderRoute: typeof ApiNodesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/data': {
@@ -327,7 +367,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAutosuggestRoute: ApiAutosuggestRoute,
   ApiCopilotRoute: ApiCopilotRoute,
   ApiDataRoute: ApiDataRoute,
+  ApiNodesRoute: ApiNodesRoute,
   ApiPlaceDetailRoute: ApiPlaceDetailRoute,
+  ApiPredictRoute: ApiPredictRoute,
   ApiRouteGeometryRoute: ApiRouteGeometryRoute,
   ApiSimulateRoute: ApiSimulateRoute,
 }

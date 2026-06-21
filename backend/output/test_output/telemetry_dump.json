@@ -54,6 +54,13 @@
             }
           ]
         ],
+        "vulnerability_index": 0.1225918044934368,
+        "slope": 0.0,
+        "commercial_density": 0.0220162329215255,
+        "transit_density": 0.014584757550907,
+        "dining_density": 0.0312597502955674,
+        "corporate_density": 0.0252378471299758,
+        "elevation": 900.0,
         "flipkart_impact": {
           "sla_breaches_avoided": 2260,
           "cost_savings_inr": 565000.0
@@ -102,6 +109,13 @@
             }
           ]
         ],
+        "vulnerability_index": 0.866658559922201,
+        "slope": 0.0,
+        "commercial_density": 0.8512216112749899,
+        "transit_density": 0.8483022824161269,
+        "dining_density": 0.5769090442832099,
+        "corporate_density": 0.3650369303473293,
+        "elevation": 900.0,
         "flipkart_impact": {
           "sla_breaches_avoided": 305,
           "cost_savings_inr": 76250.0
@@ -150,6 +164,13 @@
             }
           ]
         ],
+        "vulnerability_index": 0.1286864831638736,
+        "slope": 0.0,
+        "commercial_density": 9.239147429470485e-05,
+        "transit_density": 6.106122066264072e-05,
+        "dining_density": 0.0001311404110215,
+        "corporate_density": 0.000105632734998,
+        "elevation": 900.0,
         "flipkart_impact": {
           "sla_breaches_avoided": 1570,
           "cost_savings_inr": 392500.0
@@ -198,6 +219,13 @@
             }
           ]
         ],
+        "vulnerability_index": 0.8184383244291448,
+        "slope": 0.0,
+        "commercial_density": 0.6726600310765429,
+        "transit_density": 0.4444697377270984,
+        "dining_density": 0.9545757127541232,
+        "corporate_density": 0.7687707964273631,
+        "elevation": 900.0,
         "flipkart_impact": {
           "sla_breaches_avoided": 69,
           "cost_savings_inr": 17250.0
@@ -246,6 +274,13 @@
             }
           ]
         ],
+        "vulnerability_index": 0.7216694957076951,
+        "slope": 0.0,
+        "commercial_density": 0.7260974256469805,
+        "transit_density": 0.608291739365445,
+        "dining_density": 0.5460457741412795,
+        "corporate_density": 0.2549522703059194,
+        "elevation": 900.0,
         "flipkart_impact": {
           "sla_breaches_avoided": 0,
           "cost_savings_inr": 0.0
@@ -294,6 +329,13 @@
             }
           ]
         ],
+        "vulnerability_index": 0.5039275453025963,
+        "slope": 0.0,
+        "commercial_density": 0.4648817051996786,
+        "transit_density": 0.2767892422310239,
+        "dining_density": 0.4830491693948069,
+        "corporate_density": 0.2560190187750112,
+        "elevation": 900.0,
         "flipkart_impact": {
           "sla_breaches_avoided": 0,
           "cost_savings_inr": 0.0
@@ -342,6 +384,13 @@
             }
           ]
         ],
+        "vulnerability_index": 0.1223775743949048,
+        "slope": 0.0,
+        "commercial_density": 0.0009137586794183,
+        "transit_density": 0.0006032687877125,
+        "dining_density": 0.0012966726629361,
+        "corporate_density": 0.0010435041483378,
+        "elevation": 900.0,
         "flipkart_impact": {
           "sla_breaches_avoided": 1570,
           "cost_savings_inr": 392500.0

@@ -4,6 +4,7 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YA
 import { SectionHeader, TabStrip, Eyebrow, Readout } from "@/components/hud";
 import { useTelemetry } from "@/lib/telemetry-context";
 import { DEPLOYMENT_FRONTIER } from "@/lib/mock";
+import { useTheme } from "@/lib/theme";
 
 export const Route = createFileRoute("/optimizer")({
   head: () => ({
@@ -282,23 +283,33 @@ const runScenarioSimulation = (hotspotsList: any[], activeScenarios: Record<stri
 function BeforeAfter() {
   const [pos, setPos] = useState(50);
   const { rawHotspots, summary } = useTelemetry();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   const avgCapacityRecovered = summary?.avg_capacity_recovered || 5;
   const totalSavings = summary?.total_savings || 118;
 
   const avgDelayBefore = rawHotspots.length > 0
-    ? Math.round(rawHotspots.reduce((sum: number, h: any) => sum + (parseFloat(h.travel_time_before) || 0), 0) / rawHotspots.length)
-    : 72;
+    ? rawHotspots.reduce((sum: number, h: any) => sum + (parseFloat(h.travel_time_before) || 0), 0) / rawHotspots.length
+    : 3.2;
 
   const avgDelayAfter = rawHotspots.length > 0
-    ? Math.round(rawHotspots.reduce((sum: number, h: any) => sum + (parseFloat(h.travel_time_after) || 0), 0) / rawHotspots.length)
-    : 49;
+    ? rawHotspots.reduce((sum: number, h: any) => sum + (parseFloat(h.travel_time_after) || 0), 0) / rawHotspots.length
+    : 2.1;
 
   const avgDelaySaved = Math.max(0, avgDelayBefore - avgDelayAfter);
 
+  // Scrubber-dependent live values
+  const pctAfter = (100 - pos) / 100;
+  
+  const currentCongestion = Math.round(100 - pctAfter * avgCapacityRecovered);
+  const currentDelay = avgDelayBefore - pctAfter * avgDelaySaved;
+  const currentSavings = Math.round(pctAfter * totalSavings);
+  const currentLogisticsRecovery = Math.round(pctAfter * (avgCapacityRecovered * 1.2));
+
   return (
     <div className="space-y-4">
-      <div className="relative h-72 border border-hairline overflow-hidden select-none bg-slate-950 rounded-xl">
+      <div className={`relative h-72 border border-hairline overflow-hidden select-none rounded-xl ${isDark ? "bg-slate-950" : "bg-slate-50"}`}>
         <style dangerouslySetInnerHTML={{ __html: `
           @keyframes flow-slow-right {
             0% { stroke-dashoffset: 0; }
@@ -349,9 +360,13 @@ function BeforeAfter() {
         `}} />
 
         {/* BEFORE STATE (Left / Bottom Layer) */}
-        <div className="absolute inset-0 w-full h-full">
+        <div className="absolute inset-0 w-full h-full" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
           <StreetLevelView state="before" />
-          <div className="absolute top-3 left-4 z-10 bg-slate-900/95 border border-red-900/40 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider text-red-500 flex items-center gap-1.5 backdrop-blur">
+          <div className={`absolute top-3 left-4 z-10 border px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 backdrop-blur ${
+            isDark 
+              ? "bg-slate-900/95 border-red-900/40 text-red-500" 
+              : "bg-white/95 border-red-200 text-red-600 shadow-sm"
+          }`}>
             <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
             <span>Before: Blocked Corridor (Status Quo)</span>
           </div>
@@ -360,7 +375,11 @@ function BeforeAfter() {
         {/* AFTER STATE (Right / Top Layer - Clipped) */}
         <div className="absolute inset-0 w-full h-full" style={{ clipPath: `inset(0 0 0 ${pos}%)` }}>
           <StreetLevelView state="after" />
-          <div className="absolute top-3 right-4 z-10 bg-slate-900/95 border border-emerald-500/40 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5 backdrop-blur">
+          <div className={`absolute top-3 right-4 z-10 border px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 backdrop-blur ${
+            isDark 
+              ? "bg-slate-900/95 border-emerald-500/40 text-emerald-400" 
+              : "bg-white/95 border-emerald-200 text-emerald-600 shadow-sm"
+          }`}>
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
             <span>After: AI-Optimized Deployment</span>
           </div>
@@ -368,13 +387,7 @@ function BeforeAfter() {
 
         {/* SCRUBBER DIVIDER LINE */}
         <div className="absolute top-0 bottom-0 pointer-events-none z-20" style={{ left: `${pos}%` }}>
-          <div className="h-full w-[2px] bg-signal relative">
-            <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-slate-900 border-2 border-signal shadow-lg flex items-center justify-center cursor-ew-resize">
-              <div className="flex gap-0.5 text-signal text-[8px] font-bold font-mono">
-                <span>◀</span><span>▶</span>
-              </div>
-            </div>
-          </div>
+          <div className="h-full w-[2px] bg-signal relative" />
         </div>
 
         {/* RANGE SLIDER INPUT OVERLAY */}
@@ -388,10 +401,30 @@ function BeforeAfter() {
         />
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Delta label="Congestion" before="100%" after={`${100 - avgCapacityRecovered}%`} delta={`−${avgCapacityRecovered}%`} />
-        <Delta label="Avg Delay" before={`${avgDelayBefore}m/km`} after={`${avgDelayAfter}m/km`} delta={`−${avgDelaySaved}m/km`} />
-        <Delta label="Total Savings" before="0h" after={`${totalSavings}h`} delta={`+${totalSavings}h`} />
-        <Delta label="Logistics Recovery" before="0%" after={`${Math.round(avgCapacityRecovered * 1.2)}%`} delta={`+${Math.round(avgCapacityRecovered * 1.2)}%`} />
+        <Delta 
+          label="Congestion" 
+          before="100%" 
+          after={`${currentCongestion}%`} 
+          delta={`−${100 - currentCongestion}%`} 
+        />
+        <Delta 
+          label="Avg Delay" 
+          before={`${avgDelayBefore.toFixed(1)}m/km`} 
+          after={`${currentDelay.toFixed(1)}m/km`} 
+          delta={`−${(avgDelayBefore - currentDelay).toFixed(1)}m/km`} 
+        />
+        <Delta 
+          label="Total Savings" 
+          before="0h" 
+          after={`${currentSavings}h`} 
+          delta={`+${currentSavings}h`} 
+        />
+        <Delta 
+          label="Logistics Recovery" 
+          before="0%" 
+          after={`${currentLogisticsRecovery}%`} 
+          delta={`+${currentLogisticsRecovery}%`} 
+        />
       </div>
     </div>
   );
@@ -580,59 +613,88 @@ function Counterfactual() {
   );
 }
 
-
 function StreetLevelView({ state }: { state: "before" | "after" }) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  // Colors
+  const gridStroke = isDark ? "rgba(255, 255, 255, 0.03)" : "rgba(15, 23, 42, 0.04)";
+  const cctvCornerStroke = isDark ? "rgba(255, 255, 255, 0.3)" : "rgba(15, 23, 42, 0.3)";
+  const recDotFill = isDark ? "#EF4444" : "#DC2626";
+  const cctvText = isDark ? "#E2E8F0" : "#0F172A";
+  const cctvSubtext = isDark ? "#94A3B8" : "#475569";
+  const roadFill = isDark ? "rgba(30, 41, 59, 0.45)" : "rgba(203, 213, 225, 0.45)";
+  const roadBorder = isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(15, 23, 42, 0.08)";
+  const dividerStroke = isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(15, 23, 42, 0.15)";
+  const centerLineStroke = "#F59E0B";
+  const crossRoadFill = isDark ? "rgba(30, 41, 59, 0.4)" : "rgba(203, 213, 225, 0.4)";
+  const intersectionFill = isDark ? "#1E293B" : "#CBD5E1";
+  const intersectionDashes = isDark ? "rgba(255, 255, 255, 0.3)" : "rgba(15, 23, 42, 0.3)";
+  
+  const beforeOverlayFill = "#EF4444";
+  const obstructionCarBg = isDark ? "#0F172A" : "#FFFFFF";
+  const hudCardBg = isDark ? "rgba(15, 23, 42, 0.9)" : "rgba(255, 255, 255, 0.95)";
+  const hudCardBorderBefore = isDark ? "#EF4444" : "#DC2626";
+  const hudCardBorderAfter = isDark ? "#10B981" : "#059669";
+  const hudCardTextTitleBefore = isDark ? "#EF4444" : "#DC2626";
+  const hudCardTextTitleAfter = isDark ? "#10B981" : "#059669";
+  const hudCardText = isDark ? "#E2E8F0" : "#1E293B";
+  const bottomHUDBg = isDark ? "rgba(15, 23, 42, 0.85)" : "rgba(255, 255, 255, 0.95)";
+  const bottomHUDBorder = isDark ? "rgba(255, 255, 255, 0.06)" : "rgba(15, 23, 42, 0.08)";
+  const bottomHUDLabel = isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(15, 23, 42, 0.5)";
+  const bottomHUDText = isDark ? "#E2E8F0" : "#0F172A";
+
   return (
     <svg viewBox="0 0 800 288" className="w-full h-full object-cover font-mono">
       {/* Blueprint grid background */}
       <defs>
         <pattern id="street-grid" width="20" height="20" patternUnits="userSpaceOnUse">
-          <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255, 255, 255, 0.03)" strokeWidth="1" />
+          <path d="M 20 0 L 0 0 0 20" fill="none" stroke={gridStroke} strokeWidth="1" />
         </pattern>
       </defs>
       <rect width="100%" height="100%" fill="url(#street-grid)" />
 
       {/* CCTV Camera HUD overlay corners */}
-      <path d="M 15 30 L 15 15 L 30 15" stroke="rgba(255, 255, 255, 0.3)" strokeWidth="1.5" fill="none" />
-      <path d="M 785 30 L 785 15 L 770 15" stroke="rgba(255, 255, 255, 0.3)" strokeWidth="1.5" fill="none" />
-      <path d="M 15 258 L 15 273 L 30 273" stroke="rgba(255, 255, 255, 0.3)" strokeWidth="1.5" fill="none" />
-      <path d="M 785 258 L 785 273 L 770 273" stroke="rgba(255, 255, 255, 0.3)" strokeWidth="1.5" fill="none" />
+      <path d="M 15 30 L 15 15 L 30 15" stroke={cctvCornerStroke} strokeWidth="1.5" fill="none" />
+      <path d="M 785 30 L 785 15 L 770 15" stroke={cctvCornerStroke} strokeWidth="1.5" fill="none" />
+      <path d="M 15 258 L 15 273 L 30 273" stroke={cctvCornerStroke} strokeWidth="1.5" fill="none" />
+      <path d="M 785 258 L 785 273 L 770 273" stroke={cctvCornerStroke} strokeWidth="1.5" fill="none" />
 
       {/* CCTV Live Feed metadata */}
       <g opacity="0.6">
-        <circle cx="28" cy="26" r="3.5" fill="#EF4444" className="animate-pulse" />
-        <text x="38" y="29" fill="#E2E8F0" fontSize="8" fontWeight="bold" letterSpacing="0.05em">REC ● CCTV_083_ORR_E</text>
-        <text x="765" y="29" fill="#E2E8F0" fontSize="8" fontWeight="bold" textAnchor="end" letterSpacing="0.05em">LIVE DISPATCH FEED</text>
-        <text x="90" y="267" fill="#94A3B8" fontSize="7" fontWeight="bold">GPS: 12.9716° N, 77.5946° E</text>
-        <text x="710" y="267" fill="#94A3B8" fontSize="7" fontWeight="bold" textAnchor="end">SYS STATUS: ACTIVE</text>
+        <circle cx="28" cy="26" r="3.5" fill={recDotFill} className="animate-pulse" />
+        <text x="38" y="29" fill={cctvText} fontSize="8" fontWeight="bold" letterSpacing="0.05em">REC ● CCTV_083_ORR_E</text>
+        <text x="765" y="29" fill={cctvText} fontSize="8" fontWeight="bold" textAnchor="end" letterSpacing="0.05em">LIVE DISPATCH FEED</text>
+        <text x="90" y="267" fill={cctvSubtext} fontSize="7" fontWeight="bold">GPS: 12.9716° N, 77.5946° E</text>
+        <text x="710" y="267" fill={cctvSubtext} fontSize="7" fontWeight="bold" textAnchor="end">SYS STATUS: ACTIVE</text>
       </g>
 
       {/* ── ROAD NETWORK DRAWINGS ────────────────────────────────────── */}
       {/* Main Horizontal Arterial (East-West) */}
-      <rect x="0" y="110" width="800" height="68" fill="rgba(30, 41, 59, 0.45)" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="1.5" />
+      <rect x="0" y="110" width="800" height="68" fill={roadFill} stroke={roadBorder} strokeWidth="1.5" />
       
       {/* Westbound Lanes Divider */}
-      <line x1="0" y1="127" x2="800" y2="127" stroke="rgba(255,255,255,0.15)" strokeWidth="1.2" strokeDasharray="5 5" />
+      <line x1="0" y1="127" x2="800" y2="127" stroke={dividerStroke} strokeWidth="1.2" strokeDasharray="5 5" />
       {/* Center Separation Line */}
-      <line x1="0" y1="144" x2="800" y2="144" stroke="#F59E0B" strokeWidth="2.5" />
+      <line x1="0" y1="144" x2="800" y2="144" stroke={centerLineStroke} strokeWidth="2.5" />
       {/* Eastbound Lanes Divider */}
-      <line x1="0" y1="161" x2="800" y2="161" stroke="rgba(255,255,255,0.15)" strokeWidth="1.2" strokeDasharray="5 5" />
+      <line x1="0" y1="161" x2="800" y2="161" stroke={dividerStroke} strokeWidth="1.2" strokeDasharray="5 5" />
 
       {/* Cross-Street A (Vertical) */}
-      <rect x="180" y="0" width="60" height="288" fill="rgba(30, 41, 59, 0.4)" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="1.5" />
-      <line x1="210" y1="0" x2="210" y2="288" stroke="rgba(255,255,255,0.15)" strokeWidth="1.2" strokeDasharray="5 5" />
+      <rect x="180" y="0" width="60" height="288" fill={crossRoadFill} stroke={roadBorder} strokeWidth="1.5" />
+      <line x1="210" y1="0" x2="210" y2="288" stroke={dividerStroke} strokeWidth="1.2" strokeDasharray="5 5" />
 
       {/* Cross-Street B (Vertical) */}
-      <rect x="540" y="0" width="60" height="288" fill="rgba(30, 41, 59, 0.4)" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="1.5" />
-      <line x1="570" y1="0" x2="570" y2="288" stroke="rgba(255,255,255,0.15)" strokeWidth="1.2" strokeDasharray="5 5" />
+      <rect x="540" y="0" width="60" height="288" fill={crossRoadFill} stroke={roadBorder} strokeWidth="1.5" />
+      <line x1="570" y1="0" x2="570" y2="288" stroke={dividerStroke} strokeWidth="1.2" strokeDasharray="5 5" />
 
       {/* Intersection Markings */}
       {/* Intersection A */}
-      <rect x="181" y="111" width="58" height="66" fill="#1E293B" opacity="0.8" />
-      <path d="M 185 115 L 185 173 M 235 115 L 235 173" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeDasharray="2 3" />
+      <rect x="181" y="111" width="58" height="66" fill={intersectionFill} opacity="0.8" />
+      <path d="M 185 115 L 185 173 M 235 115 L 235 173" stroke={intersectionDashes} strokeWidth="2" strokeDasharray="2 3" />
       {/* Intersection B */}
-      <rect x="541" y="111" width="58" height="66" fill="#1E293B" opacity="0.8" />
-      <path d="M 545 115 L 545 173 M 595 115 L 595 173" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeDasharray="2 3" />
+      <rect x="541" y="111" width="58" height="66" fill={intersectionFill} opacity="0.8" />
+      <path d="M 545 115 L 545 173 M 595 115 L 595 173" stroke={intersectionDashes} strokeWidth="2" strokeDasharray="2 3" />
 
       {/* ── FLOW SEGMENTS STATE OVERLAYS ──────────────────────────────── */}
       {/* Static Unchanged Flow Segments */}
@@ -647,7 +709,7 @@ function StreetLevelView({ state }: { state: "before" | "after" }) {
       
       {/* Segment 4: Far Right (Westbound) - Green free flow */}
       <line x1="600" y1="135.5" x2="800" y2="135.5" stroke="#10B981" strokeWidth="4" strokeLinecap="round" opacity="0.8" />
-
+      
       {/* Segment 5: Cross Street Flows - Green free flow */}
       <line x1="210" y1="0" x2="210" y2="110" stroke="#10B981" strokeWidth="3" opacity="0.7" />
       <line x1="210" y1="178" x2="210" y2="288" stroke="#10B981" strokeWidth="3" opacity="0.7" />
@@ -658,13 +720,13 @@ function StreetLevelView({ state }: { state: "before" | "after" }) {
       {state === "before" ? (
         <>
           {/* Eastbound Middle Segment (CONGESTED BEFORE) */}
-          <rect x="240" y="147" width="160" height="28" fill="#EF4444" stroke="#EF4444" strokeWidth="1.5" className="animate-pulse-qr" />
-          <line x1="240" y1="152.5" x2="400" y2="152.5" stroke="#EF4444" strokeWidth="5" strokeLinecap="round" />
+          <rect x="240" y="147" width="160" height="28" fill={beforeOverlayFill} stroke={beforeOverlayFill} strokeWidth="1.5" className="animate-pulse-qr" />
+          <line x1="240" y1="152.5" x2="400" y2="152.5" stroke={beforeOverlayFill} strokeWidth="5" strokeLinecap="round" />
           <line x1="240" y1="152.5" x2="400" y2="152.5" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" className="animate-flow-slow-rt" />
           
           {/* Westbound Middle Segment (CONGESTED BEFORE) */}
-          <rect x="380" y="112" width="160" height="28" fill="#EF4444" stroke="#EF4444" strokeWidth="1.5" className="animate-pulse-qr" />
-          <line x1="380" y1="135.5" x2="540" y2="135.5" stroke="#EF4444" strokeWidth="5" strokeLinecap="round" />
+          <rect x="380" y="112" width="160" height="28" fill={beforeOverlayFill} stroke={beforeOverlayFill} strokeWidth="1.5" className="animate-pulse-qr" />
+          <line x1="380" y1="135.5" x2="540" y2="135.5" stroke={beforeOverlayFill} strokeWidth="5" strokeLinecap="round" />
           <line x1="380" y1="135.5" x2="540" y2="135.5" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" className="animate-flow-slow-lt" />
 
           {/* ── ILLEGALLY PARKED VEHICLES (VIOLATIONS) ────────────────────── */}
@@ -679,7 +741,7 @@ function StreetLevelView({ state }: { state: "before" | "after" }) {
 
           {/* Westbound Obstruction (at x = 355) */}
           <g transform="translate(355, 115)">
-            <rect x="0" y="0" width="22" height="11" fill="#0F172A" stroke="#F59E0B" strokeWidth="1.5" rx="2" />
+            <rect x="0" y="0" width="22" height="11" fill={obstructionCarBg} stroke="#F59E0B" strokeWidth="1.5" rx="2" />
             <rect x="3" y="2" width="15" height="7" fill="#475569" rx="1" />
             <circle cx="5" cy="5.5" r="2.5" className="animate-blink-hz" />
             <circle cx="17" cy="5.5" r="2.5" className="animate-blink-hz" />
@@ -693,13 +755,13 @@ function StreetLevelView({ state }: { state: "before" | "after" }) {
             <circle cx="480" cy="120" r="3" fill="#EF4444" stroke="#FFFFFF" strokeWidth="1" />
             
             {/* HUD Card Container */}
-            <rect x="420" y="25" width="170" height="50" rx="4" fill="rgba(15, 23, 42, 0.9)" stroke="#EF4444" strokeWidth="1.5" />
+            <rect x="420" y="25" width="170" height="50" rx="4" fill={hudCardBg} stroke={hudCardBorderBefore} strokeWidth="1.5" />
             
             {/* HUD Details */}
-            <text x="430" y="37" fill="#EF4444" fontSize="7.5" fontWeight="black" letterSpacing="0.05em">ZONE [WB_LANE_BOT] - CRITICAL</text>
-            <text x="430" y="49" fill="#E2E8F0" fontSize="8" fontWeight="bold">FLOW SPEED: &lt;5 KM/H</text>
-            <text x="430" y="60" fill="#E2E8F0" fontSize="8" fontWeight="bold">QUEUE: 210m</text>
-            <text x="430" y="70" fill="#EF4444" fontSize="7" fontWeight="bold" letterSpacing="0.02em">STATUS: STALLED / UNRESOLVED</text>
+            <text x="430" y="37" fill={hudCardTextTitleBefore} fontSize="7.5" fontWeight="black" letterSpacing="0.05em">ZONE [WB_LANE_BOT] - CRITICAL</text>
+            <text x="430" y="49" fill={hudCardText} fontSize="8" fontWeight="bold">FLOW SPEED: &lt;5 KM/H</text>
+            <text x="430" y="60" fill={hudCardText} fontSize="8" fontWeight="bold">QUEUE: 210m</text>
+            <text x="430" y="70" fill={hudCardTextTitleBefore} fontSize="7" fontWeight="bold" letterSpacing="0.02em">STATUS: STALLED / UNRESOLVED</text>
           </g>
 
           {/* ── BOTTOM HUD CALLOUT: EASTBOUND CHOKE (BEFORE) ─────────────── */}
@@ -709,13 +771,13 @@ function StreetLevelView({ state }: { state: "before" | "after" }) {
             <circle cx="320" cy="165" r="3" fill="#EF4444" stroke="#FFFFFF" strokeWidth="1" />
             
             {/* HUD Card Container */}
-            <rect x="215" y="210" width="170" height="50" rx="4" fill="rgba(15, 23, 42, 0.9)" stroke="#EF4444" strokeWidth="1.5" />
+            <rect x="215" y="210" width="170" height="50" rx="4" fill={hudCardBg} stroke={hudCardBorderBefore} strokeWidth="1.5" />
             
             {/* HUD Details */}
-            <text x="225" y="222" fill="#EF4444" fontSize="7.5" fontWeight="black" letterSpacing="0.05em">ZONE [EB_LANE_BOT] - BLOCKED</text>
-            <text x="225" y="234" fill="#E2E8F0" fontSize="8" fontWeight="bold">FLOW SPEED: &lt;5 KM/H</text>
-            <text x="225" y="245" fill="#E2E8F0" fontSize="8" fontWeight="bold">QUEUE: 180m</text>
-            <text x="225" y="255" fill="#EF4444" fontSize="7" fontWeight="bold" letterSpacing="0.02em">STATUS: CONGESTED / PARKING VIOL</text>
+            <text x="225" y="222" fill={hudCardTextTitleBefore} fontSize="7.5" fontWeight="black" letterSpacing="0.05em">ZONE [EB_LANE_BOT] - BLOCKED</text>
+            <text x="225" y="234" fill={hudCardText} fontSize="8" fontWeight="bold">FLOW SPEED: &lt;5 KM/H</text>
+            <text x="225" y="245" fill={hudCardText} fontSize="8" fontWeight="bold">QUEUE: 180m</text>
+            <text x="225" y="255" fill={hudCardTextTitleBefore} fontSize="7" fontWeight="bold" letterSpacing="0.02em">STATUS: CONGESTED / PARKING VIOL</text>
           </g>
         </>
       ) : (
@@ -730,10 +792,10 @@ function StreetLevelView({ state }: { state: "before" | "after" }) {
 
           {/* BTP Dispatch Tow Truck Clearing Scene */}
           <g transform="translate(420, 150)">
-            <line x1="-15" y1="5.5" x2="0" y2="5.5" stroke="#94A3B8" strokeWidth="1.5" strokeDasharray="3 3" />
+            <line x1="-15" y1="5.5" x2="0" y2="5.5" stroke={cctvSubtext} strokeWidth="1.5" strokeDasharray="3 3" />
             <rect x="0" y="-1" width="18" height="13" fill="#10B981" rx="2" />
             <path d="M 0 5.5 L -8 5.5 L -10 10" fill="none" stroke="#10B981" strokeWidth="1.5" />
-            <rect x="10" y="2" width="6" height="7" fill="#E2E8F0" />
+            <rect x="10" y="2" width="6" height="7" fill={isDark ? "#E2E8F0" : "#1E293B"} />
             <text x="8" y="-4" fill="#10B981" fontSize="6" fontWeight="bold" textAnchor="middle">BTP TOWED</text>
           </g>
 
@@ -744,13 +806,13 @@ function StreetLevelView({ state }: { state: "before" | "after" }) {
             <circle cx="480" cy="120" r="3" fill="#10B981" stroke="#FFFFFF" strokeWidth="1" />
             
             {/* HUD Card Container */}
-            <rect x="420" y="25" width="170" height="50" rx="4" fill="rgba(15, 23, 42, 0.9)" stroke="#10B981" strokeWidth="1.5" />
+            <rect x="420" y="25" width="170" height="50" rx="4" fill={hudCardBg} stroke={hudCardBorderAfter} strokeWidth="1.5" />
             
             {/* HUD Details */}
-            <text x="430" y="37" fill="#10B981" fontSize="7.5" fontWeight="black" letterSpacing="0.05em">ZONE [WB_LANE_BOT] - RESOLVED</text>
-            <text x="430" y="49" fill="#E2E8F0" fontSize="8" fontWeight="bold">FLOW SPEED: 48 KM/H (FREE)</text>
-            <text x="430" y="60" fill="#E2E8F0" fontSize="8" fontWeight="bold">QUEUE: 0m (CLEAR)</text>
-            <text x="430" y="70" fill="#10B981" fontSize="7" fontWeight="bold" letterSpacing="0.02em">STATUS: DISPATCH COMPLETE</text>
+            <text x="430" y="37" fill={hudCardTextTitleAfter} fontSize="7.5" fontWeight="black" letterSpacing="0.05em">ZONE [WB_LANE_BOT] - RESOLVED</text>
+            <text x="430" y="49" fill={hudCardText} fontSize="8" fontWeight="bold">FLOW SPEED: 48 KM/H (FREE)</text>
+            <text x="430" y="60" fill={hudCardText} fontSize="8" fontWeight="bold">QUEUE: 0m (CLEAR)</text>
+            <text x="430" y="70" fill={hudCardTextTitleAfter} fontSize="7" fontWeight="bold" letterSpacing="0.02em">STATUS: DISPATCH COMPLETE</text>
           </g>
 
           {/* ── BOTTOM HUD CALLOUT: EASTBOUND CHOKE (AFTER) ──────────────── */}
@@ -760,25 +822,25 @@ function StreetLevelView({ state }: { state: "before" | "after" }) {
             <circle cx="320" cy="165" r="3" fill="#10B981" stroke="#FFFFFF" strokeWidth="1" />
             
             {/* HUD Card Container */}
-            <rect x="215" y="210" width="170" height="50" rx="4" fill="rgba(15, 23, 42, 0.9)" stroke="#10B981" strokeWidth="1.5" />
+            <rect x="215" y="210" width="170" height="50" rx="4" fill={hudCardBg} stroke={hudCardBorderAfter} strokeWidth="1.5" />
             
             {/* HUD Details */}
-            <text x="225" y="222" fill="#10B981" fontSize="7.5" fontWeight="black" letterSpacing="0.05em">ZONE [EB_LANE_BOT] - OPTIMAL</text>
-            <text x="225" y="234" fill="#E2E8F0" fontSize="8" fontWeight="bold">FLOW SPEED: 45 KM/H (FREE)</text>
-            <text x="225" y="245" fill="#E2E8F0" fontSize="8" fontWeight="bold">QUEUE: 0m (CLEAR)</text>
-            <text x="225" y="255" fill="#10B981" fontSize="7" fontWeight="bold" letterSpacing="0.02em">STATUS: BTP DEPLOYMENT CLEARED</text>
+            <text x="225" y="222" fill={hudCardTextTitleAfter} fontSize="7.5" fontWeight="black" letterSpacing="0.05em">ZONE [EB_LANE_BOT] - OPTIMAL</text>
+            <text x="225" y="234" fill={hudCardText} fontSize="8" fontWeight="bold">FLOW SPEED: 45 KM/H (FREE)</text>
+            <text x="225" y="245" fill={hudCardText} fontSize="8" fontWeight="bold">QUEUE: 0m (CLEAR)</text>
+            <text x="225" y="255" fill={hudCardTextTitleAfter} fontSize="7" fontWeight="bold" letterSpacing="0.02em">STATUS: BTP DEPLOYMENT CLEARED</text>
           </g>
         </>
       )}
 
       {/* Sector details */}
       <g>
-        <rect x="10" y="248" width="70" height="30" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="rgba(255,255,255,0.06)" />
-        <text x="45" y="260" fill="rgba(255,255,255,0.4)" fontSize="7" fontWeight="bold" textAnchor="middle">SECTOR ID</text>
-        <text x="45" y="273" fill="#E2E8F0" fontSize="10" fontWeight="bold" textAnchor="middle" className="readout">KA-03-MGR</text>
+        <rect x="10" y="248" width="70" height="30" rx="4" fill={bottomHUDBg} stroke={bottomHUDBorder} />
+        <text x="45" y="260" fill={bottomHUDLabel} fontSize="7" fontWeight="bold" textAnchor="middle">SECTOR ID</text>
+        <text x="45" y="273" fill={bottomHUDText} fontSize="10" fontWeight="bold" textAnchor="middle" className="readout">KA-03-MGR</text>
 
-        <rect x="720" y="248" width="70" height="30" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="rgba(255,255,255,0.06)" />
-        <text x="755" y="260" fill="rgba(255,255,255,0.4)" fontSize="7" fontWeight="bold" textAnchor="middle">CORRIDOR FLOW</text>
+        <rect x="720" y="248" width="70" height="30" rx="4" fill={bottomHUDBg} stroke={bottomHUDBorder} />
+        <text x="755" y="260" fill={bottomHUDLabel} fontSize="7" fontWeight="bold" textAnchor="middle">CORRIDOR FLOW</text>
         <text x="755" y="273" fill={state === "before" ? "#EF4444" : "#10B981"} fontSize="10" fontWeight="bold" textAnchor="middle" className="readout">
           {state === "before" ? "CONGESTED" : "OPTIMAL"}
         </text>

@@ -1,0 +1,7 @@
+{
+  "sla_breach_multiplier": 1.4,
+  "sla_cost_multiplier_inr": 250.0,
+  "commuter_delay_savings_threshold": 1500.0,
+  "logistics_penalty_threshold": 0.45,
+  "constriction_coef": 0.3
+}

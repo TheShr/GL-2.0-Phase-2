@@ -1,3 +1,7 @@
+import sys
+# Mask transformers to prevent PyTorch/ONNX from importing it and crashing on version mismatches
+sys.modules['transformers'] = None
+
 import os
 import pandas as pd
 import numpy as np
@@ -38,7 +42,7 @@ def prepare_spatiotemporal_data(cleaned_csv_path, nodes_csv_path, edges_json_pat
         edges_data = json.load(f)
         
     # Convert created_ist to datetime
-    df['created_ist'] = pd.to_datetime(df['created_ist'])
+    df['created_ist'] = pd.to_datetime(df['created_ist'], format='mixed')
     
     # 1. Setup Time shifts
     # We bin violations into 4-hour windows (6 shifts per day)
@@ -120,19 +124,6 @@ def prepare_spatiotemporal_data(cleaned_csv_path, nodes_csv_path, edges_json_pat
         spatial_temporal_grid[s, n, 6] = row['auto_count'] / 10.0
         spatial_temporal_grid[s, n, 7] = row['total_count'] / 20.0
         spatial_temporal_grid[s, n, 14] = row['capacity_loss'] # Target Cap Loss
-        
-    # Apply Synthetic Demand Multiplier to evening shifts (hour >= 12) to resolve reporting bias
-    print("Applying Synthetic Demand Multiplier to unrecorded evening/night shifts...")
-    for s in range(num_shifts):
-        shift_time = start_time + pd.Timedelta(seconds=s * 4 * 3600)
-        hour = shift_time.hour
-        if hour >= 12:
-            vi = nodes_df['vulnerability_index'].values
-            # Impute counts based on vulnerability index (max threshold of expected evening activity)
-            spatial_temporal_grid[s, :, 4] = np.maximum(spatial_temporal_grid[s, :, 4], vi * 0.3)
-            spatial_temporal_grid[s, :, 5] = np.maximum(spatial_temporal_grid[s, :, 5], vi * 0.4)
-            spatial_temporal_grid[s, :, 6] = np.maximum(spatial_temporal_grid[s, :, 6], vi * 0.2)
-            spatial_temporal_grid[s, :, 7] = np.maximum(spatial_temporal_grid[s, :, 7], vi * 0.8)
 
     # 4. Map edges JSON to PyTorch long tensor: [2, num_edges]
     print("Mapping graph edges index...")
@@ -164,14 +155,6 @@ def prepare_spatiotemporal_data(cleaned_csv_path, nodes_csv_path, edges_json_pat
         target_violations = spatial_temporal_grid[t + seq_len, :, 7]
         target_risk = np.clip(target_violations / 20.0, 0, 1)
         
-        # Apply evening bias vulnerability compensation on target
-        shift_time = start_time + pd.Timedelta(seconds=(t + seq_len) * 4 * 3600)
-        hour = shift_time.hour
-        if hour >= 12:
-            # If evening shift, baseline risk is backed by structural vulnerability
-            vi = nodes_df['vulnerability_index'].values
-            target_risk = np.maximum(target_risk, vi * 0.8)
-        
         # Apply target log-transformation if enabled
         if log_transform:
             target_risk = np.log1p(target_risk)
@@ -184,23 +167,99 @@ def prepare_spatiotemporal_data(cleaned_csv_path, nodes_csv_path, edges_json_pat
     
     return X, Y_risk, edge_index, num_nodes, num_features, nodes_df
 
-def train_xgboost_fallback_model(X_train, Y_train, X_val, Y_val, num_nodes, num_features):
-    print("\n--- Training XGBoost Spatial Lag Fallback Model ---")
-    # Flatten datasets for tabular learning: [num_sequences, seq_len, num_nodes, num_features] -> [num_sequences * num_nodes, num_features]
-    num_train_seq = X_train.size(0)
+def build_spatial_lag_features(X_tensor, edge_index, nodes_df):
+    """
+    Engineers spatial lag features for XGBoost baseline.
+    X_tensor: [batch_size, seq_len, num_nodes, num_features]
+    edge_index: [2, num_edges]
+    nodes_df: DataFrame of nodes with latitude and longitude
+    Returns: numpy array of shape [batch_size * num_nodes, num_features + 3]
+    """
+    num_seq = X_tensor.size(0)
+    num_nodes = len(nodes_df)
     
-    def build_tabular_features(X_tensor):
-        num_seq = X_tensor.size(0)
-        X_flat = []
-        for seq in range(num_seq):
-            for node in range(num_nodes):
-                node_seq_feats = X_tensor[seq, :, node, :].numpy()
-                X_flat.append(node_seq_feats.mean(axis=0))
-        return np.array(X_flat)
+    # Extract node coordinates for distance weighting
+    lats = nodes_df['latitude'].values
+    lons = nodes_df['longitude'].values
+    
+    # Distance matrix D
+    D = np.sqrt((lats[:, None] - lats[None, :])**2 + (lons[:, None] - lons[None, :])**2)
+    W = 1.0 / (D + 1e-4)
+    np.fill_diagonal(W, 0.0)
+    
+    # Adjacency list from edge_index
+    adj_list = {i: [] for i in range(num_nodes)}
+    edge_index_np = edge_index.cpu().numpy()
+    for col in range(edge_index_np.shape[1]):
+        u = int(edge_index_np[0, col])
+        v = int(edge_index_np[1, col])
+        adj_list[u].append(v)
         
-    X_train_tab = build_tabular_features(X_train)
+    # Precompute 2nd-order neighbors
+    adj_list_2nd = {i: [] for i in range(num_nodes)}
+    for u in range(num_nodes):
+        visited = {u}
+        for v in adj_list[u]:
+            visited.add(v)
+        for v in adj_list[u]:
+            for w in adj_list[v]:
+                if w not in visited:
+                    adj_list_2nd[u].append(w)
+                    visited.add(w)
+                    
+    # Precompute 1st-order and 2nd-order transition matrices
+    A_1st = np.zeros((num_nodes, num_nodes))
+    for i in range(num_nodes):
+        neighbors = adj_list[i]
+        if len(neighbors) > 0:
+            A_1st[i, neighbors] = 1.0 / len(neighbors)
+        else:
+            A_1st[i, i] = 1.0
+            
+    A_2nd = np.zeros((num_nodes, num_nodes))
+    for i in range(num_nodes):
+        neighbors = adj_list_2nd[i]
+        if len(neighbors) > 0:
+            A_2nd[i, neighbors] = 1.0 / len(neighbors)
+        else:
+            A_2nd[i, i] = 1.0
+            
+    W_sum = W.sum(axis=1, keepdims=True)
+    W_norm = np.where(W_sum > 0, W / W_sum, 0.0)
+
+    # Convert X_tensor to numpy and compute means over sequence length dimension (axis=1)
+    X_np = X_tensor.numpy()
+    # own_feats_all shape: [num_seq, num_nodes, num_features]
+    own_feats_all = X_np.mean(axis=1)
+    
+    # viols_all shape: [num_seq, num_nodes]
+    viols_all = X_np[:, :, :, 7].mean(axis=1)
+    
+    # Vectorized lags calculation
+    # lag_1_all shape: [num_seq, num_nodes]
+    lag_1_all = viols_all @ A_1st.T
+    # lag_2_all shape: [num_seq, num_nodes]
+    lag_2_all = viols_all @ A_2nd.T
+    # lag_dist_all shape: [num_seq, num_nodes]
+    lag_dist_all = viols_all @ W_norm.T
+    
+    # Add new axis to lags to match own_feats_all dimensions
+    lag_1_all = lag_1_all[:, :, np.newaxis]
+    lag_2_all = lag_2_all[:, :, np.newaxis]
+    lag_dist_all = lag_dist_all[:, :, np.newaxis]
+    
+    # Concatenate features: own_feats_all + lags
+    # result shape: [num_seq, num_nodes, num_features + 3]
+    features_all = np.concatenate([own_feats_all, lag_1_all, lag_2_all, lag_dist_all], axis=-1)
+    
+    # Flatten to [num_seq * num_nodes, num_features + 3]
+    return features_all.reshape(num_seq * num_nodes, -1)
+
+def train_xgboost_fallback_model(X_train, Y_train, X_val, Y_val, edge_index, nodes_df):
+    print("\n--- Training XGBoost Spatial Lag Fallback Model ---")
+    X_train_tab = build_spatial_lag_features(X_train, edge_index, nodes_df)
     Y_train_tab = Y_train.numpy().flatten()
-    X_val_tab = build_tabular_features(X_val)
+    X_val_tab = build_spatial_lag_features(X_val, edge_index, nodes_df)
     Y_val_tab = Y_val.numpy().flatten()
     
     from xgboost import XGBRegressor
@@ -227,12 +286,8 @@ def run_inference_pipeline(stgat_model, xgb_model, X, edge_index, nodes_df, num_
             gnn_risk_tensor = torch.expm1(gnn_risk_tensor)
         gnn_risk = gnn_risk_tensor.cpu().numpy()
         
-    # 2. XGBoost Inference
-    last_x_seq_tab = []
-    for node in range(num_nodes):
-        node_seq_feats = last_x_seq[0, :, node, :].numpy()
-        last_x_seq_tab.append(node_seq_feats.mean(axis=0))
-    last_x_seq_tab = np.array(last_x_seq_tab)
+    # 2. XGBoost Inference (with spatial lags)
+    last_x_seq_tab = build_spatial_lag_features(last_x_seq, edge_index, nodes_df)
     
     xgb_risk = xgb_model.predict(last_x_seq_tab) # shape [num_nodes]
     # Auto-detect log_transform and inverse-transform fallback predictions back to [0, 1] range
@@ -252,7 +307,7 @@ def run_inference_pipeline(stgat_model, xgb_model, X, edge_index, nodes_df, num_
     nodes_df.to_csv("output/graph_nodes.csv", index=False)
     print("Next shift predicted risk scores calculated and written to output/graph_nodes.csv")
  
-def train_model(epochs=5, batch_size=8, log_transform=True):
+def train_model(epochs=5, batch_size=8, log_transform=True, tuned=True):
     cleaned_csv = "output/graph_nodes.csv"
     raw_csv = "output/temp_cleaned_violations.csv"
     edges_json = "output/graph_edges.json"
@@ -278,45 +333,21 @@ def train_model(epochs=5, batch_size=8, log_transform=True):
     X_train, Y_risk_train = X[:split_idx], Y_risk[:split_idx]
     X_val, Y_risk_val = X[split_idx:], Y_risk[split_idx:]
     
-    # 3. Instantiate model
-    print("\nInstantiating ST-GAT Model...")
+    # 3. Instantiate model with capacity corresponding to baseline vs tuned configuration
+    spatial_dim = 64 if tuned else 16
+    temporal_dim = 32 if tuned else 8
+    print(f"\nInstantiating ST-GAT Model (tuned={tuned}, spatial_hidden={spatial_dim}, temporal_hidden={temporal_dim})...")
+    
     model = STGATModel(
         num_nodes=num_nodes,
         in_features=num_features,
-        spatial_hidden=16,
-        temporal_hidden=8,
+        spatial_hidden=spatial_dim,
+        temporal_hidden=temporal_dim,
         log_transform=log_transform
     )
     
-    class CustomAdam:
-        def __init__(self, parameters, lr=0.005, betas=(0.9, 0.999), eps=1e-8):
-            self.params = list(parameters)
-            self.lr = lr
-            self.beta1, self.beta2 = betas
-            self.eps = eps
-            self.m = [torch.zeros_like(p) for p in self.params]
-            self.v = [torch.zeros_like(p) for p in self.params]
-            self.t = 0
- 
-        def step(self):
-            self.t += 1
-            with torch.no_grad():
-                for i, p in enumerate(self.params):
-                    if p.grad is None:
-                        continue
-                    grad = p.grad
-                    self.m[i] = self.beta1 * self.m[i] + (1.0 - self.beta1) * grad
-                    self.v[i] = self.beta2 * self.v[i] + (1.0 - self.beta2) * (grad ** 2)
-                    m_hat = self.m[i] / (1.0 - self.beta1 ** self.t)
-                    v_hat = self.v[i] / (1.0 - self.beta2 ** self.t)
-                    p.copy_(p - self.lr * m_hat / (torch.sqrt(v_hat) + self.eps))
- 
-        def zero_grad(self):
-            for p in self.params:
-                if p.grad is not None:
-                    p.grad.zero_()
- 
-    optimizer = CustomAdam(model.parameters(), lr=0.005)
+    # Use native PyTorch Adam optimizer with L2 weight decay regularization
+    optimizer = optim.Adam(model.parameters(), lr=0.005, weight_decay=1e-4)
     
     # Compute node loss weights based on corporate/transit density and historical violation volumes (log-scaled prior)
     corp_dens = torch.tensor(nodes_df['corporate_density'].values, dtype=torch.float32)
@@ -360,6 +391,13 @@ def train_model(epochs=5, batch_size=8, log_transform=True):
             
             # Use Weighted Huber Loss with node-specific deltas on raw violations scale
             loss = weighted_huber_loss(risk_pred_raw, y_risk_b_raw, node_weights, deltas=node_deltas)
+            
+            # If tuned, apply entropy regularization on the adaptive adjacency matrix to prevent collapse / sparsity overfitting
+            if tuned:
+                A_adaptive = model.last_A_adaptive
+                entropy_loss = -0.01 * torch.sum(A_adaptive * torch.log(A_adaptive + 1e-12)) / model.num_nodes
+                loss = loss + entropy_loss
+                
             loss.backward()
             optimizer.step()
             
@@ -398,15 +436,24 @@ def train_model(epochs=5, batch_size=8, log_transform=True):
         
     # 5. Save model weights
     os.makedirs("output", exist_ok=True)
-    weights_path = "output/stgat_model.pt"
-    torch.save(model.state_dict(), weights_path)
-    print(f"\nModel training complete! Weights saved successfully to: {weights_path}")
+    if tuned:
+        torch.save(model.state_dict(), "output/stgat_tuned.pt")
+        torch.save(model.state_dict(), "output/stgat_model.pt")  # Primary checkpoint used by frontend
+        print(f"\nTuned model training complete! Weights saved successfully to output/stgat_tuned.pt and output/stgat_model.pt")
+    else:
+        torch.save(model.state_dict(), "output/stgat_baseline.pt")
+        print(f"\nBaseline model training complete! Weights saved successfully to output/stgat_baseline.pt")
     
-    # 6. Train XGBoost Fallback Model
-    xgb_model = train_xgboost_fallback_model(X_train, Y_risk_train, X_val, Y_risk_val, num_nodes, num_features)
+    # 6. Train XGBoost Fallback Model (incorporating spatial lags)
+    xgb_model = train_xgboost_fallback_model(X_train, Y_risk_train, X_val, Y_risk_val, edge_index, nodes_df)
     
     # 7. Run Inference to update graph nodes predicted risk
-    run_inference_pipeline(model, xgb_model, X, edge_index, nodes_df, num_nodes, num_features)
+    if tuned:
+        run_inference_pipeline(model, xgb_model, X, edge_index, nodes_df, num_nodes, num_features)
  
 if __name__ == "__main__":
-    train_model(epochs=12, batch_size=8, log_transform=True)
+    # Train both baseline and tuned models to support evaluation comparison
+    print("=== Training ST-GAT Baseline Model ===")
+    train_model(epochs=12, batch_size=8, log_transform=True, tuned=False)
+    print("\n=== Training ST-GAT Tuned Model ===")
+    train_model(epochs=12, batch_size=8, log_transform=True, tuned=True)

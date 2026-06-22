@@ -229,7 +229,19 @@ export const Route = createFileRoute("/api/copilot")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const { message, context, history, liveData } = await request.json();
+          const { message: rawMessage, context, history, liveData } = await request.json();
+          
+          const sanitizeMessage = (msg: string): string => {
+            if (typeof msg !== 'string') return '';
+            let cleaned = msg.replace(/(ignore\s+(?:all\s+)?previous\s+instructions|system\s+override|you\s+must\s+now\s+act\s+as|forget\s+what\s+was\s+said|new\s+role)/gi, '[PROTECTED_INPUT_STRIPPED]');
+            return cleaned.trim().slice(0, 1000);
+          };
+
+          if (rawMessage && typeof rawMessage === 'string' && /(ignore\s+(?:all\s+)?previous\s+instructions|system\s+override|you\s+must\s+now\s+act\s+as|forget\s+what\s+was\s+said|new\s+role)/gi.test(rawMessage)) {
+            return streamText("Query blocked: Potential instruction override detected.");
+          }
+
+          const message = sanitizeMessage(rawMessage);
           
           const apiKey = process.env.GROQ_API_KEY || "";
           

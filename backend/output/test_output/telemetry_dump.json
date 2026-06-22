@@ -1,91 +1,104 @@
 {
   "0": {
     "summary": {
-      "total_hotspots": 7,
-      "total_violations": 114506,
-      "avg_capacity_recovered": 5,
-      "total_savings": 1408,
+      "total_hotspots": 31,
+      "total_violations": 138587,
+      "avg_capacity_recovered": 2,
+      "total_savings": 0,
       "flipkart_impact": {
-        "sla_breaches_avoided": 5774,
-        "cost_savings_inr": 1443500.0
+        "sla_breaches_avoided": 0,
+        "cost_savings_inr": 0.0
       }
     },
     "hotspots": [
       {
         "rank": 1,
-        "cluster_id": 2,
-        "police_station": "HSR Layout",
-        "road_class": "Hosur Road NH 44",
-        "lanes": 4,
-        "lat": 12.898,
-        "lon": 77.63,
-        "predicted_risk_index": 0.1004314386666666,
-        "capacity_reduction_rcf": 0.008706231858441552,
-        "logistics_weight": 3.0,
-        "logistics_penalty_index": 0.3724759811266256,
-        "travel_time_before": "1.9",
-        "travel_time_after": "1.9",
-        "delay_savings_per_vehicle": "8.3",
-        "total_commuter_time_saved_hours": 538.020861627348,
-        "priority_score": 42.19189821183765,
-        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
-        "enforcement_action": "Wheel clamping + lane clearance",
-        "nearest_landmark": "7th Main Road, Hongasandra, Bengaluru, Karnataka. Pin-560068 (India)",
+        "cluster_id": 6,
+        "police_station": "City Market",
+        "road_class": "MG Road Central Commercial",
+        "lanes": 3,
+        "lat": 12.96642857142857,
+        "lon": 77.57714285714285,
+        "predicted_risk_index": 0.005867230025,
+        "capacity_reduction_rcf": 0.021894167602081252,
+        "logistics_weight": 1.8,
+        "logistics_penalty_index": 0.039409501683746254,
+        "travel_time_before": "1.7",
+        "travel_time_after": "1.7",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 2.8033170129997504,
+        "target_shift": "Morning Rush (08:00 - 12:00 IST)",
+        "enforcement_action": "Tow trucks + double-parking citations",
+        "nearest_landmark": "Near coordinates (12.9664, 77.5771)",
         "directed_side": "left",
-        "upstream_edges": [
-          [
-            {
-              "lat": 12.917,
-              "lng": 77.622
-            },
-            {
-              "lat": 12.91,
-              "lng": 77.641
-            }
-          ],
-          [
-            {
-              "lat": 12.91,
-              "lng": 77.641
-            },
-            {
-              "lat": 12.898,
-              "lng": 77.63
-            }
-          ]
-        ],
-        "vulnerability_index": 0.1225918044934368,
-        "slope": 0.0,
-        "commercial_density": 0.0220162329215255,
-        "transit_density": 0.014584757550907,
-        "dining_density": 0.0312597502955674,
-        "corporate_density": 0.0252378471299758,
-        "elevation": 900.0,
+        "upstream_edges": [],
+        "vulnerability_index": 0.634769120189754,
+        "slope": 0.0141992432352572,
+        "commercial_density": 0.6616839867110887,
+        "transit_density": 0.6506543747464689,
+        "dining_density": 0.2887674292437321,
+        "corporate_density": 0.2230546648175725,
+        "elevation": 895.3496263247968,
         "flipkart_impact": {
-          "sla_breaches_avoided": 2260,
-          "cost_savings_inr": 565000.0
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
         }
       },
       {
         "rank": 2,
-        "cluster_id": 3,
+        "cluster_id": 17,
+        "police_station": "Hulimavu",
+        "road_class": "Hosur Road NH 44",
+        "lanes": 4,
+        "lat": 12.88108125,
+        "lon": 77.64325,
+        "predicted_risk_index": 0.0023103464125,
+        "capacity_reduction_rcf": 0.04090810098464157,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.04090810098464157,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 2.796517124684438,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (12.8811, 77.6432)",
+        "directed_side": "left",
+        "upstream_edges": [],
+        "vulnerability_index": 0.1554193227682684,
+        "slope": 0.0270427444417131,
+        "commercial_density": 0.0072355631146112,
+        "transit_density": 0.0098352387826653,
+        "dining_density": 0.0357718825092944,
+        "corporate_density": 0.0088561422810499,
+        "elevation": 905.3122612575957,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 3,
+        "cluster_id": 29,
         "police_station": "Upparpet",
         "road_class": "MG Road Central Commercial",
         "lanes": 3,
-        "lat": 12.9715,
-        "lon": 77.5735,
-        "predicted_risk_index": 0.712188495,
-        "capacity_reduction_rcf": 0.07656032820980725,
+        "lat": 12.973357142857145,
+        "lon": 77.57278571428571,
+        "predicted_risk_index": 0.004370925875,
+        "capacity_reduction_rcf": 0.012904709734806162,
         "logistics_weight": 3.0,
-        "logistics_penalty_index": 0.22968098462942177,
-        "travel_time_before": "4.5",
+        "logistics_penalty_index": 0.03871412920441849,
+        "travel_time_before": "1.7",
         "travel_time_after": "1.7",
-        "delay_savings_per_vehicle": "2.8",
-        "total_commuter_time_saved_hours": 72.70121970731287,
-        "priority_score": 38.61641968415647,
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 2.7120697232112327,
         "target_shift": "Morning Rush (08:00 - 12:00 IST)",
         "enforcement_action": "Tow trucks + double-parking citations",
-        "nearest_landmark": "1st Cross Road, Sowrashtrapete, Chickpete, Bengaluru, Karnataka. Pin-560053 (India)",
+        "nearest_landmark": "Near coordinates (12.9734, 77.5728)",
         "directed_side": "left",
         "upstream_edges": [
           [
@@ -109,178 +122,81 @@
             }
           ]
         ],
-        "vulnerability_index": 0.866658559922201,
-        "slope": 0.0,
-        "commercial_density": 0.8512216112749899,
-        "transit_density": 0.8483022824161269,
-        "dining_density": 0.5769090442832099,
-        "corporate_density": 0.3650369303473293,
-        "elevation": 900.0,
+        "vulnerability_index": 0.8342206669543305,
+        "slope": 0.0082850466930889,
+        "commercial_density": 0.9327907193792504,
+        "transit_density": 0.9303777878371,
+        "dining_density": 0.3159091293836157,
+        "corporate_density": 0.2001967373307409,
+        "elevation": 906.4496832616873,
         "flipkart_impact": {
-          "sla_breaches_avoided": 305,
-          "cost_savings_inr": 76250.0
-        }
-      },
-      {
-        "rank": 3,
-        "cluster_id": 6,
-        "police_station": "Bellandur",
-        "road_class": "Sarjapur Road",
-        "lanes": 2,
-        "lat": 12.913933333333334,
-        "lon": 77.67886666666666,
-        "predicted_risk_index": 0.1059098818333333,
-        "capacity_reduction_rcf": 0.0176490887625161,
-        "logistics_weight": 3.0,
-        "logistics_penalty_index": 0.2588721096391142,
-        "travel_time_before": "3.0",
-        "travel_time_after": "3.0",
-        "delay_savings_per_vehicle": "5.8",
-        "total_commuter_time_saved_hours": 373.92638058983164,
-        "priority_score": 30.406807246669793,
-        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
-        "enforcement_action": "Wheel clamping + lane clearance",
-        "nearest_landmark": "Sarjapura Main Road, Venkataramanappa Reddy Layout, Kaikondrahalli, Bengaluru, Karnataka. Pin-560035 (India)",
-        "directed_side": "left",
-        "upstream_edges": [
-          [
-            {
-              "lat": 12.93,
-              "lng": 77.68
-            },
-            {
-              "lat": 12.914,
-              "lng": 77.678
-            }
-          ],
-          [
-            {
-              "lat": 12.92,
-              "lng": 77.67
-            },
-            {
-              "lat": 12.93,
-              "lng": 77.68
-            }
-          ]
-        ],
-        "vulnerability_index": 0.1286864831638736,
-        "slope": 0.0,
-        "commercial_density": 9.239147429470485e-05,
-        "transit_density": 6.106122066264072e-05,
-        "dining_density": 0.0001311404110215,
-        "corporate_density": 0.000105632734998,
-        "elevation": 900.0,
-        "flipkart_impact": {
-          "sla_breaches_avoided": 1570,
-          "cost_savings_inr": 392500.0
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
         }
       },
       {
         "rank": 4,
-        "cluster_id": 5,
-        "police_station": "Adugodi",
-        "road_class": "Koramangala Inner Ring Road",
-        "lanes": 2,
-        "lat": 12.93493956043956,
-        "lon": 77.62677472527471,
-        "predicted_risk_index": 0.6344203485714287,
-        "capacity_reduction_rcf": 0.10231842712001947,
+        "cluster_id": 21,
+        "police_station": "K.R. Pura",
+        "road_class": "Outer Ring Road ORR",
+        "lanes": 4,
+        "lat": 12.99775,
+        "lon": 77.68375,
+        "predicted_risk_index": 0.00250303064,
+        "capacity_reduction_rcf": 0.03519759547158281,
         "logistics_weight": 1.0,
-        "logistics_penalty_index": 0.10231842712001947,
-        "travel_time_before": "4.7",
+        "logistics_penalty_index": 0.03519759547158281,
+        "travel_time_before": "1.6",
         "travel_time_after": "1.6",
-        "delay_savings_per_vehicle": "3.1",
-        "total_commuter_time_saved_hours": 49.1797852268212,
-        "priority_score": 27.165299871192726,
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 2.4215972839721873,
         "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
         "enforcement_action": "Wheel clamping + lane clearance",
-        "nearest_landmark": "16th Main Road, Sony World Junction, Koramangala, Bengaluru, Karnataka. Pin-560034 (India)",
+        "nearest_landmark": "Near coordinates (12.9977, 77.6838)",
         "directed_side": "left",
-        "upstream_edges": [
-          [
-            {
-              "lat": 12.937,
-              "lng": 77.631
-            },
-            {
-              "lat": 12.934,
-              "lng": 77.624
-            }
-          ],
-          [
-            {
-              "lat": 12.962,
-              "lng": 77.638
-            },
-            {
-              "lat": 12.934,
-              "lng": 77.626
-            }
-          ]
-        ],
-        "vulnerability_index": 0.8184383244291448,
-        "slope": 0.0,
-        "commercial_density": 0.6726600310765429,
-        "transit_density": 0.4444697377270984,
-        "dining_density": 0.9545757127541232,
-        "corporate_density": 0.7687707964273631,
-        "elevation": 900.0,
+        "upstream_edges": [],
+        "vulnerability_index": 0.1596252903151314,
+        "slope": 0.0233196715268455,
+        "commercial_density": 0.0019095059112151,
+        "transit_density": 0.0008842333707149,
+        "dining_density": 0.1011862924007054,
+        "corporate_density": 0.0673839071556541,
+        "elevation": 886.3782584137016,
         "flipkart_impact": {
-          "sla_breaches_avoided": 69,
-          "cost_savings_inr": 17250.0
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
         }
       },
       {
         "rank": 5,
-        "cluster_id": 4,
-        "police_station": "Cubbon Park",
+        "cluster_id": 25,
+        "police_station": "Shivajinagar",
         "road_class": "MG Road Central Commercial",
         "lanes": 3,
-        "lat": 12.970499999999998,
-        "lon": 77.5915,
-        "predicted_risk_index": 0.565169664,
-        "capacity_reduction_rcf": 0.04779386830218308,
-        "logistics_weight": 1.0,
-        "logistics_penalty_index": 0.04779386830218308,
-        "travel_time_before": "1.6",
-        "travel_time_after": "1.6",
+        "lat": 12.97422857142857,
+        "lon": 77.607,
+        "predicted_risk_index": 0.0032883425714285,
+        "capacity_reduction_rcf": 0.018645426761626827,
+        "logistics_weight": 1.8,
+        "logistics_penalty_index": 0.03356176817092829,
+        "travel_time_before": "1.7",
+        "travel_time_after": "1.7",
         "delay_savings_per_vehicle": "0.0",
-        "total_commuter_time_saved_hours": 0.0799943390356848,
-        "priority_score": 20.14348098918649,
-        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
-        "enforcement_action": "Wheel clamping + lane clearance",
-        "nearest_landmark": "Kasturba Road, Siddalingaiah Circle, Gandhi Nagar, Bengaluru, Karnataka. Pin-560001 (India)",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 2.336101488538074,
+        "target_shift": "Morning Rush (08:00 - 12:00 IST)",
+        "enforcement_action": "Tow trucks + double-parking citations",
+        "nearest_landmark": "Near coordinates (12.9742, 77.6070)",
         "directed_side": "left",
-        "upstream_edges": [
-          [
-            {
-              "lat": 12.975,
-              "lng": 77.607
-            },
-            {
-              "lat": 12.972,
-              "lng": 77.595
-            }
-          ],
-          [
-            {
-              "lat": 12.972,
-              "lng": 77.595
-            },
-            {
-              "lat": 12.97,
-              "lng": 77.591
-            }
-          ]
-        ],
-        "vulnerability_index": 0.7216694957076951,
-        "slope": 0.0,
-        "commercial_density": 0.7260974256469805,
-        "transit_density": 0.608291739365445,
-        "dining_density": 0.5460457741412795,
-        "corporate_density": 0.2549522703059194,
-        "elevation": 900.0,
+        "upstream_edges": [],
+        "vulnerability_index": 0.5839001366816036,
+        "slope": 0.0122127105618936,
+        "commercial_density": 0.6668050604673963,
+        "transit_density": 0.4918220530387893,
+        "dining_density": 0.2731548703601151,
+        "corporate_density": 0.1844829115376887,
+        "elevation": 946.952825836399,
         "flipkart_impact": {
           "sla_breaches_avoided": 0,
           "cost_savings_inr": 0.0
@@ -288,24 +204,24 @@
       },
       {
         "rank": 6,
-        "cluster_id": 1,
+        "cluster_id": 15,
         "police_station": "Halasur",
-        "road_class": "MG Road Central Commercial",
-        "lanes": 3,
-        "lat": 12.974375000000002,
-        "lon": 77.62023863636364,
-        "predicted_risk_index": 0.3946734175,
-        "capacity_reduction_rcf": 0.04745322674046143,
+        "road_class": "Koramangala Inner Ring Road",
+        "lanes": 2,
+        "lat": 12.959222222222223,
+        "lon": 77.63722222222223,
+        "predicted_risk_index": 0.002219133,
+        "capacity_reduction_rcf": 0.03211134706056069,
         "logistics_weight": 1.0,
-        "logistics_penalty_index": 0.04745322674046143,
+        "logistics_penalty_index": 0.03211134706056069,
         "travel_time_before": "1.6",
         "travel_time_after": "1.6",
         "delay_savings_per_vehicle": "0.0",
-        "total_commuter_time_saved_hours": 0.07939188142038682,
-        "priority_score": 15.005868091201972,
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 2.207330460704046,
         "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
         "enforcement_action": "Wheel clamping + lane clearance",
-        "nearest_landmark": "Murphy Road, Begum Mahal Junction, Halasuru, Bengaluru, Karnataka. Pin-560008 (India)",
+        "nearest_landmark": "Near coordinates (12.9592, 77.6372)",
         "directed_side": "left",
         "upstream_edges": [
           [
@@ -329,13 +245,13 @@
             }
           ]
         ],
-        "vulnerability_index": 0.5039275453025963,
-        "slope": 0.0,
-        "commercial_density": 0.4648817051996786,
-        "transit_density": 0.2767892422310239,
-        "dining_density": 0.4830491693948069,
-        "corporate_density": 0.2560190187750112,
-        "elevation": 900.0,
+        "vulnerability_index": 0.4465351992349597,
+        "slope": 0.0211282600363508,
+        "commercial_density": 0.3812255640150825,
+        "transit_density": 0.1933674878814679,
+        "dining_density": 0.2433292408709462,
+        "corporate_density": 0.1583855549260639,
+        "elevation": 913.4721856930742,
         "flipkart_impact": {
           "sla_breaches_avoided": 0,
           "cost_savings_inr": 0.0
@@ -343,24 +259,877 @@
       },
       {
         "rank": 7,
+        "cluster_id": 7,
+        "police_station": "Cubbon Park",
+        "road_class": "MG Road Central Commercial",
+        "lanes": 3,
+        "lat": 12.9718125,
+        "lon": 77.5951875,
+        "predicted_risk_index": 0.002875859375,
+        "capacity_reduction_rcf": 0.027002874387403727,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.027002874387403727,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 1.886467407076915,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (12.9718, 77.5952)",
+        "directed_side": "left",
+        "upstream_edges": [
+          [
+            {
+              "lat": 12.975,
+              "lng": 77.607
+            },
+            {
+              "lat": 12.972,
+              "lng": 77.595
+            }
+          ],
+          [
+            {
+              "lat": 12.972,
+              "lng": 77.595
+            },
+            {
+              "lat": 12.97,
+              "lng": 77.591
+            }
+          ]
+        ],
+        "vulnerability_index": 0.731429523420889,
+        "slope": 0.0178018984947545,
+        "commercial_density": 0.7575695326621111,
+        "transit_density": 0.6090538585633223,
+        "dining_density": 0.4161546369793039,
+        "corporate_density": 0.1689574542475784,
+        "elevation": 926.2991934226972,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 8,
+        "cluster_id": 23,
+        "police_station": "Mico Layout",
+        "road_class": "Hosur Road NH 44",
+        "lanes": 4,
+        "lat": 12.913825,
+        "lon": 77.62290357142858,
+        "predicted_risk_index": 0.002256512125,
+        "capacity_reduction_rcf": 0.026901270592409755,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.026901270592409755,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 1.8611134032439836,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (12.9138, 77.6229)",
+        "directed_side": "left",
+        "upstream_edges": [],
+        "vulnerability_index": 0.3032044319344044,
+        "slope": 0.0178320457543757,
+        "commercial_density": 0.230916075350703,
+        "transit_density": 0.1527882977489955,
+        "dining_density": 0.163954808241043,
+        "corporate_density": 0.13218167929025,
+        "elevation": 940.7651129512758,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 9,
+        "cluster_id": 30,
+        "police_station": "Whitefield",
+        "road_class": "Whitefield ITPL Road",
+        "lanes": 3,
+        "lat": 12.968746710526316,
+        "lon": 77.74399342105264,
+        "predicted_risk_index": 0.00224005483125,
+        "capacity_reduction_rcf": 0.025533014166907425,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.025533014166907425,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 1.769402589397995,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (12.9687, 77.7440)",
+        "directed_side": "left",
+        "upstream_edges": [],
+        "vulnerability_index": 0.5058891819433244,
+        "slope": 0.016831361462843,
+        "commercial_density": 0.3684884931365954,
+        "transit_density": 0.3413433077203958,
+        "dining_density": 0.2197730671557253,
+        "corporate_density": 0.4003836466277408,
+        "elevation": 917.0352018025352,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 10,
+        "cluster_id": 26,
+        "police_station": "Unknown",
+        "road_class": "Outer Ring Road ORR",
+        "lanes": 4,
+        "lat": 12.9883125,
+        "lon": 77.69610416666667,
+        "predicted_risk_index": 0.0021692637666666,
+        "capacity_reduction_rcf": 0.02170134382515993,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.02170134382515993,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 1.51183416801066,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (12.9883, 77.6961)",
+        "directed_side": "left",
+        "upstream_edges": [],
+        "vulnerability_index": 0.128293194339751,
+        "slope": 0.0140337097967733,
+        "commercial_density": 0.0002054262665679,
+        "transit_density": 0.0001236895172208,
+        "dining_density": 0.0834593937522663,
+        "corporate_density": 0.0001159293856637,
+        "elevation": 928.4866180706996,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 11,
+        "cluster_id": 18,
+        "police_station": "Jeevanbheemanagar",
+        "road_class": "Old Airport Road",
+        "lanes": 3,
+        "lat": 12.963235294117649,
+        "lon": 77.64973796791443,
+        "predicted_risk_index": 0.0022990787529411,
+        "capacity_reduction_rcf": 0.0191347689600577,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.0191347689600577,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 1.3446236265920797,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (12.9632, 77.6497)",
+        "directed_side": "left",
+        "upstream_edges": [],
+        "vulnerability_index": 0.4050188516846387,
+        "slope": 0.0125655277510182,
+        "commercial_density": 0.318580293489167,
+        "transit_density": 0.1516305228693552,
+        "dining_density": 0.2724886757010668,
+        "corporate_density": 0.2010149469791333,
+        "elevation": 906.1807507301536,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 12,
+        "cluster_id": 2,
+        "police_station": "Banaswadi",
+        "road_class": "Outer Ring Road ORR",
+        "lanes": 4,
+        "lat": 13.017444444444443,
+        "lon": 77.64279797979799,
+        "predicted_risk_index": 0.0020970026333333,
+        "capacity_reduction_rcf": 0.018071498081915903,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.018071498081915903,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 1.2676766177943926,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (13.0174, 77.6428)",
+        "directed_side": "left",
+        "upstream_edges": [],
+        "vulnerability_index": 0.1191797807284759,
+        "slope": 0.0119447120831396,
+        "commercial_density": 0.0122135158770961,
+        "transit_density": 0.0077534683949825,
+        "dining_density": 0.0075401708320341,
+        "corporate_density": 0.0419359377268376,
+        "elevation": 869.8594030757567,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 13,
+        "cluster_id": 28,
+        "police_station": "Unknown",
+        "road_class": "Old Airport Road",
+        "lanes": 3,
+        "lat": 12.959722222222222,
+        "lon": 77.68400000000001,
+        "predicted_risk_index": 0.0020888324,
+        "capacity_reduction_rcf": 0.013322844387003149,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.013322844387003149,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 0.9508545978002099,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (12.9597, 77.6840)",
+        "directed_side": "left",
+        "upstream_edges": [],
+        "vulnerability_index": 0.1632651877586852,
+        "slope": 0.0084641297780021,
+        "commercial_density": 0.0027433621288292,
+        "transit_density": 0.0012745385104341,
+        "dining_density": 0.0017051298137104,
+        "corporate_density": 0.0843686220366669,
+        "elevation": 887.1046467217391,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 14,
+        "cluster_id": 13,
+        "police_station": "Halasur",
+        "road_class": "Old Airport Road",
+        "lanes": 3,
+        "lat": 12.971100000000002,
+        "lon": 77.62208787878788,
+        "predicted_risk_index": 0.0025467536916666,
+        "capacity_reduction_rcf": 0.01181926957383294,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.01181926957383294,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 0.8643539156721939,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (12.9711, 77.6221)",
+        "directed_side": "left",
+        "upstream_edges": [
+          [
+            {
+              "lat": 12.973,
+              "lng": 77.617
+            },
+            {
+              "lat": 12.974,
+              "lng": 77.62
+            }
+          ],
+          [
+            {
+              "lat": 12.977,
+              "lng": 77.625
+            },
+            {
+              "lat": 12.974,
+              "lng": 77.62
+            }
+          ]
+        ],
+        "vulnerability_index": 0.481180845358194,
+        "slope": 0.0076366893459519,
+        "commercial_density": 0.4386812323611007,
+        "transit_density": 0.2525505064303341,
+        "dining_density": 0.2373772606841289,
+        "corporate_density": 0.2008532156231672,
+        "elevation": 951.87397927645,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 15,
+        "cluster_id": 19,
+        "police_station": "Jeevanbheemanagar",
+        "road_class": "MG Road Central Commercial",
+        "lanes": 3,
+        "lat": 12.9778125,
+        "lon": 77.638,
+        "predicted_risk_index": 0.00248674455,
+        "capacity_reduction_rcf": 0.018422483394707565,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.018422483394707565,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 1.302767896147171,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (12.9778, 77.6380)",
+        "directed_side": "left",
+        "upstream_edges": [],
+        "vulnerability_index": 0.7450453392165192,
+        "slope": 0.0120926137395093,
+        "commercial_density": 0.7857621132380572,
+        "transit_density": 0.3684414287653459,
+        "dining_density": 0.4850745189311473,
+        "corporate_density": 0.3339529216398641,
+        "elevation": 946.7376696419408,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 16,
+        "cluster_id": 4,
+        "police_station": "Banaswadi",
+        "road_class": "Outer Ring Road ORR",
+        "lanes": 4,
+        "lat": 13.003749999999998,
+        "lon": 77.67491666666668,
+        "predicted_risk_index": 0.0020888020333333,
+        "capacity_reduction_rcf": 0.017525812220706538,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.017525812220706538,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 1.2310515423804347,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (13.0037, 77.6749)",
+        "directed_side": "left",
+        "upstream_edges": [],
+        "vulnerability_index": 0.1037770533190072,
+        "slope": 0.0115321597418757,
+        "commercial_density": 0.005570587280538,
+        "transit_density": 0.002579695897616,
+        "dining_density": 0.0034608076929959,
+        "corporate_density": 0.0020922005807033,
+        "elevation": 861.8121242602028,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 17,
+        "cluster_id": 1,
+        "police_station": "Ashok Nagar",
+        "road_class": "Koramangala Inner Ring Road",
+        "lanes": 2,
+        "lat": 12.946027777777775,
+        "lon": 77.63352777777777,
+        "predicted_risk_index": 0.0022491451166666,
+        "capacity_reduction_rcf": 0.016680096322238974,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.016680096322238974,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 1.1794807749825962,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (12.9460, 77.6335)",
+        "directed_side": "left",
+        "upstream_edges": [],
+        "vulnerability_index": 0.5879368633640832,
+        "slope": 0.0107657468334333,
+        "commercial_density": 0.4180707405101067,
+        "transit_density": 0.2665102674315115,
+        "dining_density": 0.4170794888339182,
+        "corporate_density": 0.3122813960427545,
+        "elevation": 889.0911927512906,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 18,
+        "cluster_id": 22,
+        "police_station": "Mahadevapura",
+        "road_class": "Whitefield ITPL Road",
+        "lanes": 3,
+        "lat": 12.985098456477733,
+        "lon": 77.70774354757086,
+        "predicted_risk_index": 0.0021485629538461,
+        "capacity_reduction_rcf": 0.016010696104168196,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.016010696104168196,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 1.1318366288932626,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (12.9851, 77.7077)",
+        "directed_side": "left",
+        "upstream_edges": [],
+        "vulnerability_index": 0.2074928445714168,
+        "slope": 0.0104937772732893,
+        "commercial_density": 0.0291731182069829,
+        "transit_density": 0.0269749277080185,
+        "dining_density": 0.0943250464042354,
+        "corporate_density": 0.0868502732101654,
+        "elevation": 938.3291748104156,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 19,
+        "cluster_id": 27,
+        "police_station": "Unknown",
+        "road_class": "Outer Ring Road ORR",
+        "lanes": 4,
+        "lat": 12.920945054945054,
+        "lon": 77.6586043956044,
+        "predicted_risk_index": 0.0020960324538461,
+        "capacity_reduction_rcf": 0.01140271034409063,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.01140271034409063,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 0.8230616632214249,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (12.9209, 77.6586)",
+        "directed_side": "left",
+        "upstream_edges": [],
+        "vulnerability_index": 0.1656753617766029,
+        "slope": 0.0071826004052912,
+        "commercial_density": 0.0292173304533784,
+        "transit_density": 0.0193213680494464,
+        "dining_density": 0.0399710368524125,
+        "corporate_density": 0.0167141756600259,
+        "elevation": 879.9685746470909,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 20,
+        "cluster_id": 14,
+        "police_station": "Halasur",
+        "road_class": "MG Road Central Commercial",
+        "lanes": 3,
+        "lat": 12.97725,
+        "lon": 77.629,
+        "predicted_risk_index": 0.0027815958333333,
+        "capacity_reduction_rcf": 0.00900774001983108,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.00900774001983108,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 0.683963876322071,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (12.9772, 77.6290)",
+        "directed_side": "left",
+        "upstream_edges": [
+          [
+            {
+              "lat": 12.973,
+              "lng": 77.617
+            },
+            {
+              "lat": 12.974,
+              "lng": 77.62
+            }
+          ],
+          [
+            {
+              "lat": 12.977,
+              "lng": 77.625
+            },
+            {
+              "lat": 12.974,
+              "lng": 77.62
+            }
+          ]
+        ],
+        "vulnerability_index": 0.6269359239122212,
+        "slope": 0.0057587797077741,
+        "commercial_density": 0.6138995197813061,
+        "transit_density": 0.3056265202723604,
+        "dining_density": 0.5319026297612555,
+        "corporate_density": 0.214755176148876,
+        "elevation": 956.7290421159,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 21,
         "cluster_id": 0,
+        "police_station": "Adugodi",
+        "road_class": "Sarjapur Road",
+        "lanes": 2,
+        "lat": 12.931605769230767,
+        "lon": 77.63064423076922,
+        "predicted_risk_index": 0.002419139625,
+        "capacity_reduction_rcf": 0.005089339924787913,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.005089339924787913,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 0.4118635170691942,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (12.9316, 77.6306)",
+        "directed_side": "left",
+        "upstream_edges": [
+          [
+            {
+              "lat": 12.937,
+              "lng": 77.631
+            },
+            {
+              "lat": 12.934,
+              "lng": 77.624
+            }
+          ],
+          [
+            {
+              "lat": 12.962,
+              "lng": 77.638
+            },
+            {
+              "lat": 12.934,
+              "lng": 77.626
+            }
+          ]
+        ],
+        "vulnerability_index": 0.7291739289110635,
+        "slope": 0.0031250428336366,
+        "commercial_density": 0.5771180544686055,
+        "transit_density": 0.3815116680974335,
+        "dining_density": 0.5345893306725716,
+        "corporate_density": 0.3855390087364562,
+        "elevation": 892.2706969799245,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 22,
+        "cluster_id": 20,
+        "police_station": "K.G. Halli",
+        "road_class": "Outer Ring Road ORR",
+        "lanes": 4,
+        "lat": 13.02385,
+        "lon": 77.6207,
+        "predicted_risk_index": 0.0021638860399999,
+        "capacity_reduction_rcf": 0.004304348208146896,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.004304348208146896,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 0.35187312840979,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (13.0238, 77.6207)",
+        "directed_side": "left",
+        "upstream_edges": [],
+        "vulnerability_index": 0.1789721218022802,
+        "slope": 0.0026999183810129,
+        "commercial_density": 0.0571206185649439,
+        "transit_density": 0.1477101139422997,
+        "dining_density": 0.0366845670097433,
+        "corporate_density": 0.0443059143340269,
+        "elevation": 893.0450693883092,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 23,
+        "cluster_id": 24,
+        "police_station": "R.T. Nagar",
+        "road_class": "Outer Ring Road ORR",
+        "lanes": 4,
+        "lat": 13.03225,
+        "lon": 77.6025,
+        "predicted_risk_index": 0.0023286250599999,
+        "capacity_reduction_rcf": 0.003263726331579776,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.003263726331579776,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 0.2874405072386487,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (13.0322, 77.6025)",
+        "directed_side": "left",
+        "upstream_edges": [],
+        "vulnerability_index": 0.5324274519923196,
+        "slope": 0.0020466448844578,
+        "commercial_density": 0.2672777318310479,
+        "transit_density": 0.7383431333574041,
+        "dining_density": 0.2265457472544846,
+        "corporate_density": 0.2216370805051858,
+        "elevation": 893.6415759892352,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 24,
+        "cluster_id": 3,
+        "police_station": "Banaswadi",
+        "road_class": "Outer Ring Road ORR",
+        "lanes": 4,
+        "lat": 13.008214285714288,
+        "lon": 77.66125974025975,
+        "predicted_risk_index": 0.0020852842285714,
+        "capacity_reduction_rcf": 0.003158029483864068,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.003158029483864068,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 0.27309382578141317,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (13.0082, 77.6613)",
+        "directed_side": "left",
+        "upstream_edges": [],
+        "vulnerability_index": 0.1489762809949485,
+        "slope": 0.0020169308643079,
+        "commercial_density": 0.0204406963825721,
+        "transit_density": 0.0094723632930884,
+        "dining_density": 0.0126973185252886,
+        "corporate_density": 0.0076769587189344,
+        "elevation": 854.7875897252683,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 25,
+        "cluster_id": 16,
+        "police_station": "Hennuru",
+        "road_class": "Outer Ring Road ORR",
+        "lanes": 4,
+        "lat": 13.027666666666669,
+        "lon": 77.61166666666666,
+        "predicted_risk_index": 0.0021542805,
+        "capacity_reduction_rcf": 0.0009841024771610031,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.0009841024771610031,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 0.13023524681073353,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (13.0277, 77.6117)",
+        "directed_side": "left",
+        "upstream_edges": [],
+        "vulnerability_index": 0.3123700060604329,
+        "slope": 0.0004936286191154,
+        "commercial_density": 0.1481681993373561,
+        "transit_density": 0.4026909889607273,
+        "dining_density": 0.0970328365243815,
+        "corporate_density": 0.1206730158374438,
+        "elevation": 895.0145655659176,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 26,
+        "cluster_id": 8,
+        "police_station": "Electronic City",
+        "road_class": "Hosur Road NH 44",
+        "lanes": 4,
+        "lat": 12.859475,
+        "lon": 77.65828125,
+        "predicted_risk_index": 0.00232180095625,
+        "capacity_reduction_rcf": 0.021843440823482593,
+        "logistics_weight": 1.0,
+        "logistics_penalty_index": 0.0,
+        "travel_time_before": "1.6",
+        "travel_time_after": "1.6",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 0.0696540286875,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (12.8595, 77.6583)",
+        "directed_side": "left",
+        "upstream_edges": [],
+        "vulnerability_index": 0.4181529492844602,
+        "slope": 0.0144450891888458,
+        "commercial_density": 0.215516212919525,
+        "transit_density": 0.2994598389346335,
+        "dining_density": 0.196393466187903,
+        "corporate_density": 0.3011167742874958,
+        "elevation": 855.1131019642703,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 27,
+        "cluster_id": 9,
+        "police_station": "HAL Old Airport",
+        "road_class": "Outer Ring Road ORR",
+        "lanes": 4,
+        "lat": 12.950891865079363,
+        "lon": 77.69445535714286,
+        "predicted_risk_index": 0.0023106337107142,
+        "capacity_reduction_rcf": 0.022561407207210726,
+        "logistics_weight": 3.0,
+        "logistics_penalty_index": 0.0,
+        "travel_time_before": "1.9",
+        "travel_time_after": "1.9",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 0.069319011321426,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (12.9509, 77.6945)",
+        "directed_side": "left",
+        "upstream_edges": [],
+        "vulnerability_index": 0.125974654454145,
+        "slope": 0.0149019855844154,
+        "commercial_density": 0.0002444444521908,
+        "transit_density": 0.0001902101396155,
+        "dining_density": 0.0180054178384927,
+        "corporate_density": 0.0180528084005827,
+        "elevation": 888.4159635522076,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 28,
+        "cluster_id": 12,
+        "police_station": "HSR Layout",
+        "road_class": "Hosur Road NH 44",
+        "lanes": 4,
+        "lat": 12.897175,
+        "lon": 77.63087142857142,
+        "predicted_risk_index": 0.00217513338,
+        "capacity_reduction_rcf": 0.015779909671904162,
+        "logistics_weight": 3.0,
+        "logistics_penalty_index": 0.0,
+        "travel_time_before": "1.9",
+        "travel_time_after": "1.9",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 0.0652540014,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (12.8972, 77.6309)",
+        "directed_side": "left",
+        "upstream_edges": [
+          [
+            {
+              "lat": 12.917,
+              "lng": 77.622
+            },
+            {
+              "lat": 12.91,
+              "lng": 77.641
+            }
+          ],
+          [
+            {
+              "lat": 12.91,
+              "lng": 77.641
+            },
+            {
+              "lat": 12.898,
+              "lng": 77.63
+            }
+          ]
+        ],
+        "vulnerability_index": 0.1561326082175664,
+        "slope": 0.0103611882164982,
+        "commercial_density": 0.0218061920700877,
+        "transit_density": 0.0144726455466528,
+        "dining_density": 0.0654774649646301,
+        "corporate_density": 0.0458571138764164,
+        "elevation": 951.4662288339738,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 29,
+        "cluster_id": 5,
         "police_station": "Bellandur",
         "road_class": "Sarjapur Road",
         "lanes": 2,
-        "lat": 12.9191,
-        "lon": 77.6712,
-        "predicted_risk_index": 0.10298373975,
-        "capacity_reduction_rcf": 0.018278499262987014,
+        "lat": 12.91795,
+        "lon": 77.67606071428574,
+        "predicted_risk_index": 0.0021718928142857,
+        "capacity_reduction_rcf": 0.020238181102465624,
         "logistics_weight": 3.0,
-        "logistics_penalty_index": 0.2588721096391142,
-        "travel_time_before": "3.0",
-        "travel_time_after": "3.0",
-        "delay_savings_per_vehicle": "5.8",
-        "total_commuter_time_saved_hours": 373.92638058983164,
-        "priority_score": 30.31902298416979,
+        "logistics_penalty_index": 0.0,
+        "travel_time_before": "2.2",
+        "travel_time_after": "2.3",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 0.065156784428571,
         "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
         "enforcement_action": "Wheel clamping + lane clearance",
-        "nearest_landmark": "Sarjapura Main Road, Ambience Diva, Bellandur, Bengaluru, Karnataka. Pin-560103 (India)",
+        "nearest_landmark": "Near coordinates (12.9179, 77.6761)",
         "directed_side": "left",
         "upstream_edges": [
           [
@@ -384,16 +1153,105 @@
             }
           ]
         ],
-        "vulnerability_index": 0.1223775743949048,
-        "slope": 0.0,
-        "commercial_density": 0.0009137586794183,
-        "transit_density": 0.0006032687877125,
-        "dining_density": 0.0012966726629361,
-        "corporate_density": 0.0010435041483378,
-        "elevation": 900.0,
+        "vulnerability_index": 0.1965667299211154,
+        "slope": 0.0131881477628351,
+        "commercial_density": 0.0027951611939198,
+        "transit_density": 0.0018469369140021,
+        "dining_density": 0.0734121516667509,
+        "corporate_density": 0.0492165796926581,
+        "elevation": 886.0558856861195,
         "flipkart_impact": {
-          "sla_breaches_avoided": 1570,
-          "cost_savings_inr": 392500.0
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 30,
+        "cluster_id": 11,
+        "police_station": "HSR Layout",
+        "road_class": "Outer Ring Road ORR",
+        "lanes": 4,
+        "lat": 12.916508039329091,
+        "lon": 77.64115286292653,
+        "predicted_risk_index": 0.0021416294842105,
+        "capacity_reduction_rcf": 0.01825457447570317,
+        "logistics_weight": 3.0,
+        "logistics_penalty_index": 0.0,
+        "travel_time_before": "1.9",
+        "travel_time_after": "1.9",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 0.06424888452631501,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (12.9165, 77.6412)",
+        "directed_side": "left",
+        "upstream_edges": [
+          [
+            {
+              "lat": 12.917,
+              "lng": 77.622
+            },
+            {
+              "lat": 12.91,
+              "lng": 77.641
+            }
+          ],
+          [
+            {
+              "lat": 12.91,
+              "lng": 77.641
+            },
+            {
+              "lat": 12.898,
+              "lng": 77.63
+            }
+          ]
+        ],
+        "vulnerability_index": 0.263633335361367,
+        "slope": 0.0120652752738066,
+        "commercial_density": 0.1226963579972366,
+        "transit_density": 0.0811713476381916,
+        "dining_density": 0.1397429464416263,
+        "corporate_density": 0.10530996902709,
+        "elevation": 914.78802240599,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
+        }
+      },
+      {
+        "rank": 31,
+        "cluster_id": 10,
+        "police_station": "HAL Old Airport",
+        "road_class": "Old Airport Road",
+        "lanes": 3,
+        "lat": 12.961466666666666,
+        "lon": 77.6713,
+        "predicted_risk_index": 0.0020871281666666,
+        "capacity_reduction_rcf": 0.006556655286318741,
+        "logistics_weight": 3.0,
+        "logistics_penalty_index": 0.0,
+        "travel_time_before": "2.2",
+        "travel_time_after": "2.2",
+        "delay_savings_per_vehicle": "0.0",
+        "total_commuter_time_saved_hours": 0.0,
+        "priority_score": 0.062613844999998,
+        "target_shift": "Night/Early Morning Patrol (04:00 - 08:00 IST)",
+        "enforcement_action": "Wheel clamping + lane clearance",
+        "nearest_landmark": "Near coordinates (12.9615, 77.6713)",
+        "directed_side": "left",
+        "upstream_edges": [],
+        "vulnerability_index": 0.1969477799639923,
+        "slope": 0.0042387665259142,
+        "commercial_density": 0.0334327748474818,
+        "transit_density": 0.0155283285429242,
+        "dining_density": 0.1041235630149087,
+        "corporate_density": 0.0681577097281839,
+        "elevation": 882.1368766815872,
+        "flipkart_impact": {
+          "sla_breaches_avoided": 0,
+          "cost_savings_inr": 0.0
         }
       }
     ],

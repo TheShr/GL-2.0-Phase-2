@@ -7,26 +7,58 @@ def analyze_spatial_hotspots(nodes_csv_path, output_dir="output"):
     print("Loading graph nodes for GIS spatial analysis...")
     df = pd.read_csv(nodes_csv_path)
     
-    # 1. Run DBSCAN to group adjacent active road nodes
-    # eps=0.002 degrees is approximately 220 meters.
-    # min_samples=3 means a cluster must have at least 3 active nodes.
-    print("Running DBSCAN spatial density clustering...")
-    coords = df[['latitude', 'longitude']].values
+    # 1. Run adaptive DBSCAN to group adjacent active road nodes per police station
+    print("Running adaptive DBSCAN spatial density clustering per police station boundary...")
+    from sklearn.neighbors import NearestNeighbors
     
-    # We use euclidean distance on degrees as a local flat-plane approximation
-    db = DBSCAN(eps=0.002, min_samples=3).fit(coords)
-    df['cluster_id'] = db.labels_
+    df['cluster_id'] = -1
+    cluster_offset = 0
+    
+    for station, group in df.groupby('police_station'):
+        if len(group) < 3:
+            continue
+            
+        station_coords = group[['latitude', 'longitude']].values
+        
+        if len(station_coords) >= 4:
+            nn = NearestNeighbors(n_neighbors=4)
+            nn.fit(station_coords)
+            distances, _ = nn.kneighbors(station_coords)
+            eps = float(np.percentile(distances[:, -1], 90))
+            eps = max(0.0005, min(0.005, eps))
+        else:
+            eps = 0.002
+            
+        print(f"Station {station}: computed adaptive eps = {eps:.5f} ({len(station_coords)} nodes)")
+        
+        db = DBSCAN(eps=eps, min_samples=3).fit(station_coords)
+        
+        labels = db.labels_
+        unique_labels = set(labels)
+        
+        adjusted_labels = []
+        for l in labels:
+            if l == -1:
+                adjusted_labels.append(-1)
+            else:
+                adjusted_labels.append(l + cluster_offset)
+                
+        df.loc[group.index, 'cluster_id'] = adjusted_labels
+        
+        valid_clusters = [l for l in unique_labels if l != -1]
+        if valid_clusters:
+            cluster_offset += max(valid_clusters) + 1
 
     # Calculate cluster statistics
-    n_clusters = len(set(db.labels_)) - (1 if -1 in db.labels_ else 0)
-    n_noise = list(db.labels_).count(-1)
+    n_clusters = len(set(df['cluster_id'].values)) - (1 if -1 in df['cluster_id'].values else 0)
+    n_noise = list(df['cluster_id'].values).count(-1)
     print(f"Discovered {n_clusters} spatial hotspot clusters. Noise nodes (outliers): {n_noise}.")
 
     # 2. Extract cluster centroids and aggregate characteristics
     print("Aggregating hotspot characteristics...")
     clusters_summary = []
     
-    for cid in set(db.labels_):
+    for cid in set(df['cluster_id'].values):
         if cid == -1:
             continue # Skip noise
             

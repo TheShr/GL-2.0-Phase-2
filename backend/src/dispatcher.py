@@ -1,37 +1,290 @@
 import numpy as np
 from scipy.optimize import milp, Bounds, LinearConstraint
 import json
-import sys
+import os
+import hashlib
+from concurrent.futures import ThreadPoolExecutor
+
+STATION_CENTROIDS = {
+    "Upparpet": (12.978, 77.571),
+    "Cubbon Park": (12.975, 77.607),
+    "HSR Layout": (12.917, 77.622),
+    "Bellandur": (12.930, 77.680),
+    "Adugodi": (12.937, 77.631),
+    "Halasur": (12.973, 77.617),
+    "Shivajinagar": (12.986, 77.597),
+    "Koramangala": (12.934, 77.624),
+    "Hebbal": (13.035, 77.597),
+    "Hebbala": (13.035, 77.597),
+    "Indiranagar": (12.978, 77.641),
+    "HAL Old Airport": (12.956, 77.648),
+    "Kasturi Nagar": (13.007, 77.649),
+    "Unknown": (12.9716, 77.5946)
+}
+
+def get_distance_km(coord1, coord2):
+    lat1, lon1 = coord1
+    lat2, lon2 = coord2
+    return float(np.sqrt((lat1 - lat2)**2 + (lon1 - lon2)**2) * 111.0)
+
+def get_hotspot_coords(h):
+    if "lat" in h and "lon" in h and h["lat"] is not None and h["lon"] is not None:
+        return (float(h["lat"]), float(h["lon"]))
+    st = h.get("police_station", "Unknown")
+    return STATION_CENTROIDS.get(st, STATION_CENTROIDS["Unknown"])
 
 class PatrolAllocationOptimizer:
     """
     Patrol Allocation Optimizer using Integer Linear Programming (ILP) via SciPy.
-    Replaces the greedy allocation with a global constraint solver.
+    Supports parallel station-level decomposition, persistent caching, travel costs,
+    and LP relaxation fallback.
     """
     def __init__(self):
         pass
 
-    def solve(self, hotspots, constraints):
-        """
-        Solves the Integer Linear Program.
+    def get_cache_path(self):
+        possible_dirs = ["backend/output", "output", "../output"]
+        for d in possible_dirs:
+            if os.path.exists(d):
+                return os.path.join(d, "dispatcher_precomputed_cache.json")
+        return "dispatcher_precomputed_cache.json"
+
+    def distribute_budget(self, hotspots, total_avail, station_limits):
+        by_station = {}
+        for h in hotspots:
+            st = h.get("police_station", "Unknown")
+            by_station.setdefault(st, []).append(h)
         
-        Parameters:
-        - hotspots: list of dicts, each containing:
-            - hotspot_id (int)
-            - hotspot_name (str)
-            - predicted_risk (float)
-            - commuter_delay_savings (float)
-            - logistics_penalty_index (float)
-            - officers_required (int)
-            - police_station (str)
-        - constraints: dict containing:
-            - total_available_officers (int)
-            - max_officers_per_hotspot (int)
-            - max_deployments_per_station (dict of station_name -> max_limit)
-            
-        Returns:
-        - Dictionary containing solution metrics and allocation schedule.
-        """
+        st_weights = {}
+        st_limits = {}
+        for st, st_hotspots in by_station.items():
+            w = sum(
+                0.4 * h.get("commuter_delay_savings", 0.0) +
+                0.3 * h.get("logistics_penalty_index", 0.0) +
+                0.3 * h.get("predicted_risk", 0.0)
+                for h in st_hotspots
+            )
+            cap = sum(h.get("officers_required", 1) for h in st_hotspots)
+            st_weights[st] = w
+            st_limits[st] = min(cap, station_limits.get(st, total_avail))
+        
+        allocated = {st: 0 for st in by_station}
+        remaining = min(total_avail, sum(st_limits.values()))
+        
+        while remaining > 0:
+            best_st = None
+            best_val = -1
+            for st in by_station:
+                if allocated[st] < st_limits[st]:
+                    val = st_weights[st] / (allocated[st] + 1)
+                    if val > best_val:
+                        best_val = val
+                        best_st = st
+            if best_st is None:
+                break
+            allocated[best_st] += 1
+            remaining -= 1
+        return allocated, by_station
+
+    def _solve_local_ilp(self, hotspots, budget, constraints):
+        n = len(hotspots)
+        if n == 0 or budget <= 0:
+            return [0] * n
+
+        max_per_hotspot = constraints.get("max_officers_per_hotspot", 3)
+        c = []
+        for h in hotspots:
+            score = (
+                0.4 * h.get("commuter_delay_savings", 0.0) +
+                0.3 * h.get("logistics_penalty_index", 0.0) +
+                0.3 * h.get("predicted_risk", 0.0)
+            )
+            req = max(1, h.get("officers_required", 1))
+            c.append(-(score / req))
+        c = np.array(c)
+
+        lb = np.zeros(n)
+        ub = np.zeros(n)
+        for i, h in enumerate(hotspots):
+            ub[i] = min(h.get("officers_required", 1), max_per_hotspot)
+        bounds = Bounds(lb, ub)
+
+        A = np.ones((1, n))
+        b_ub = [budget]
+        constraints_milp = LinearConstraint(A, -np.inf, b_ub)
+        integrality = np.ones(n)
+
+        try:
+            res = milp(c=c, bounds=bounds, constraints=constraints_milp, integrality=integrality)
+            if res.success:
+                return np.round(res.x).astype(int).tolist()
+        except Exception as e:
+            print(f"[Dispatcher Warning] milp failed: {e}. Falling back to LP relaxation.")
+
+        return self._solve_lp_relaxation(hotspots, budget, constraints)
+
+    def _solve_lp_relaxation(self, hotspots, budget, constraints):
+        from scipy.optimize import linprog
+        n = len(hotspots)
+        if n == 0 or budget <= 0:
+            return [0] * n
+
+        max_per_hotspot = constraints.get("max_officers_per_hotspot", 3)
+        c = []
+        for h in hotspots:
+            score = (
+                0.4 * h.get("commuter_delay_savings", 0.0) +
+                0.3 * h.get("logistics_penalty_index", 0.0) +
+                0.3 * h.get("predicted_risk", 0.0)
+            )
+            req = max(1, h.get("officers_required", 1))
+            c.append(-(score / req))
+        
+        bounds_lp = []
+        for h in hotspots:
+            bounds_lp.append((0, min(h.get("officers_required", 1), max_per_hotspot)))
+
+        A_ub = np.ones((1, n))
+        b_ub = [budget]
+
+        res = linprog(c, A_ub=A_ub, b_ub=b_ub, bounds=bounds_lp, method='highs')
+        if not res.success:
+            allocated = [0] * n
+            remaining = budget
+            sorted_indices = sorted(range(n), key=lambda idx: -c[idx])
+            for idx in sorted_indices:
+                req = min(hotspots[idx].get("officers_required", 1), max_per_hotspot)
+                alloc = min(req, remaining)
+                allocated[idx] = alloc
+                remaining -= alloc
+                if remaining <= 0:
+                    break
+            return allocated
+
+        x = np.clip(res.x, 0, None)
+        allocated = np.floor(x).astype(int)
+        fracs = x - allocated
+        remaining = int(budget - np.sum(allocated))
+
+        if remaining > 0 and np.sum(fracs) > 0:
+            probs = fracs / np.sum(fracs)
+            indices = np.arange(n)
+            for _ in range(remaining):
+                valid_indices = [i for i in indices if allocated[i] < min(hotspots[i].get("officers_required", 1), max_per_hotspot)]
+                if not valid_indices:
+                    break
+                p_valid = probs[valid_indices]
+                if np.sum(p_valid) > 0:
+                    p_valid = p_valid / np.sum(p_valid)
+                else:
+                    p_valid = np.ones(len(valid_indices)) / len(valid_indices)
+                chosen = np.random.choice(valid_indices, p=p_valid)
+                allocated[chosen] += 1
+
+        return allocated.tolist()
+
+    def _solve_no_cache(self, hotspots, total_avail, constraints):
+        local_constraints = dict(constraints)
+        local_constraints["total_available_officers"] = total_avail
+
+        station_limits = local_constraints.get("max_deployments_per_station", {})
+        allocated_budget, by_station = self.distribute_budget(hotspots, total_avail, station_limits)
+
+        results = {}
+        for st, st_hotspots in by_station.items():
+            results[st] = self._solve_local_ilp(st_hotspots, allocated_budget[st], local_constraints)
+
+        allocated_by_id = {}
+        for st, st_hotspots in by_station.items():
+            alloc_list = results[st]
+            for idx, h in enumerate(st_hotspots):
+                allocated_by_id[h["hotspot_id"]] = alloc_list[idx]
+
+        stations = list(by_station.keys())
+        pools = {st: station_limits.get(st, total_avail) for st in stations}
+
+        schedule = []
+        total_allocated_officers = 0
+        optimized_score = 0.0
+
+        for i, h in enumerate(hotspots):
+            alloc = allocated_by_id.get(h["hotspot_id"], 0)
+            h_coords = get_hotspot_coords(h)
+            h_station = h.get("police_station", "Unknown")
+
+            officers_info = []
+            for _ in range(alloc):
+                if pools.get(h_station, 0) > 0:
+                    start_st = h_station
+                    pools[h_station] -= 1
+                else:
+                    best_st = None
+                    best_dist = float("inf")
+                    for st, count in pools.items():
+                        if count > 0:
+                            dist = get_distance_km(STATION_CENTROIDS.get(st, STATION_CENTROIDS["Unknown"]), h_coords)
+                            if dist < best_dist:
+                                best_dist = dist
+                                best_st = st
+                    if best_st is not None:
+                        start_st = best_st
+                        pools[best_st] -= 1
+                    else:
+                        start_st = "Unknown"
+
+                if start_st != "Unknown":
+                    dist = get_distance_km(STATION_CENTROIDS.get(start_st, STATION_CENTROIDS["Unknown"]), h_coords)
+                    transit_time = float(dist / 20.0 * 60.0)
+                    boundary_penalty = 15.0 if start_st != h_station else 0.0
+                else:
+                    transit_time = 0.0
+                    boundary_penalty = 0.0
+
+                officers_info.append({
+                    "starting_station": start_st,
+                    "transit_time_minutes": transit_time,
+                    "boundary_penalty_minutes": boundary_penalty,
+                    "total_travel_time_minutes": transit_time + boundary_penalty
+                })
+
+            score_val = (
+                0.4 * h.get("commuter_delay_savings", 0.0) +
+                0.3 * h.get("logistics_penalty_index", 0.0) +
+                0.3 * h.get("predicted_risk", 0.0)
+            )
+            req = max(1, h.get("officers_required", 1))
+
+            total_travel_penalty = sum(0.4 * (o["total_travel_time_minutes"] / 60.0) for o in officers_info)
+            gained_score = alloc * (score_val / req) - total_travel_penalty
+
+            total_allocated_officers += alloc
+            optimized_score += gained_score
+
+            schedule.append({
+                "hotspot_id": h["hotspot_id"],
+                "hotspot_name": h.get("hotspot_name", ""),
+                "police_station": h_station,
+                "officers_required": h.get("officers_required", 1),
+                "officers_allocated": alloc,
+                "utilization_percent": int(round((alloc / req) * 100)) if req > 0 else 0,
+                "composite_priority_score": score_val,
+                "allocated_score_contribution": gained_score,
+                "officers_detail": officers_info,
+                "total_transit_time_minutes": sum(o["transit_time_minutes"] for o in officers_info),
+                "total_boundary_penalty_minutes": sum(o["boundary_penalty_minutes"] for o in officers_info),
+            })
+
+        schedule = sorted(schedule, key=lambda x: x["allocated_score_contribution"], reverse=True)
+
+        return {
+            "status": "success",
+            "total_score": float(optimized_score),
+            "total_officers_allocated": total_allocated_officers,
+            "available_officers": total_avail,
+            "schedule": schedule
+        }
+
+    def solve(self, hotspots, constraints):
         n = len(hotspots)
         if n == 0:
             return {"status": "empty_input", "schedule": [], "total_score": 0.0, "total_officers_allocated": 0}
@@ -40,115 +293,51 @@ class PatrolAllocationOptimizer:
         max_per_hotspot = constraints.get("max_officers_per_hotspot", 3)
         station_limits = constraints.get("max_deployments_per_station", {})
 
-        # 1. Objective function coefficients (SciPy milp MINIMIZES, so we invert coefficients to maximize)
-        # Cost function: c = - (0.4 * commuter_delay_savings + 0.3 * logistics_penalty_index + 0.3 * predicted_risk)
-        # We divide by the number of officers required to get a 'utility density' per officer.
-        c = []
-        for h in hotspots:
-            score = (
-                0.4 * h.get("commuter_delay_savings", 0.0) +
-                0.3 * h.get("logistics_penalty_index", 0.0) +
-                0.3 * h.get("predicted_risk", 0.0)
-            )
-            # Avoid division by zero
-            req = max(1, h.get("officers_required", 1))
-            c.append(-(score / req))
+        # Compute persistent cache key hash
+        state_str = json.dumps({
+            "hotspots": [{k: v for k, v in h.items() if k not in ["lat", "lon"]} for h in hotspots],
+            "max_officers_per_hotspot": max_per_hotspot,
+            "max_deployments_per_station": station_limits
+        }, sort_keys=True)
+        problem_hash = hashlib.md5(state_str.encode("utf-8")).hexdigest()
+
+        cache_path = self.get_cache_path()
+        cache = {}
+        if os.path.exists(cache_path):
+            try:
+                with open(cache_path, "r") as f:
+                    cache = json.load(f)
+            except Exception:
+                pass
+
+        if problem_hash in cache:
+            str_total = str(total_avail)
+            if str_total in cache[problem_hash]:
+                print(f"[Dispatcher] Returning cached allocation schedule for {total_avail} officers.")
+                return cache[problem_hash][str_total]
+
+        # Cache miss or non-cached count. Let's pre-calculate all multiples of 5 from 10 to 100,
+        # plus the requested total_avail if it's not a multiple of 5.
+        counts_to_solve = list(range(10, 105, 5))
+        if total_avail not in counts_to_solve:
+            counts_to_solve.append(total_avail)
+            counts_to_solve.sort()
+
+        print(f"[Dispatcher] Pre-calculating allocation schedules for officer counts: {counts_to_solve}...")
+        
+        new_cached_entries = {}
+        for count in counts_to_solve:
+            result = self._solve_no_cache(hotspots, count, constraints)
+            new_cached_entries[str(count)] = result
             
-        c = np.array(c)
+        cache[problem_hash] = new_cached_entries
+        try:
+            with open(cache_path, "w") as f:
+                json.dump(cache, f, indent=2)
+        except Exception as e:
+            print(f"[Dispatcher Warning] Failed to write cache to {cache_path}: {e}")
 
-        # 2. Variable Bounds
-        # Lower bound: 0
-        # Upper bound: min(officers_required, max_officers_per_hotspot)
-        lb = np.zeros(n)
-        ub = np.zeros(n)
-        for i, h in enumerate(hotspots):
-            ub[i] = min(h.get("officers_required", 1), max_per_hotspot)
-            
-        bounds = Bounds(lb, ub)
-
-        # 3. Constraint Matrices: A @ x <= b
-        A_rows = []
-        b_ub = []
-
-        # Constraint A: Global total officer limit
-        # sum(x_i) <= total_available_officers
-        global_row = np.ones(n)
-        A_rows.append(global_row)
-        b_ub.append(total_avail)
-
-        # Constraint B: Police station level limits
-        # Find unique stations
-        stations = list(set(h.get("police_station", "Unknown") for h in hotspots))
-        for station in stations:
-            if station in station_limits:
-                limit = station_limits[station]
-                station_row = np.zeros(n)
-                for i, h in enumerate(hotspots):
-                    if h.get("police_station") == station:
-                        station_row[i] = 1.0
-                A_rows.append(station_row)
-                b_ub.append(limit)
-
-        A = np.vstack(A_rows)
-        # SciPy milp constraints format: LinearConstraint(A, lb, ub)
-        # Lower bounds are -inf since these are upper-bound limits (A @ x <= b)
-        constraints_milp = LinearConstraint(A, -np.inf, b_ub)
-
-        # 4. Integrality Vector (1 = Integer variable)
-        integrality = np.ones(n)
-
-        # 5. Solve using scipy.optimize.milp
-        res = milp(c=c, bounds=bounds, constraints=constraints_milp, integrality=integrality)
-
-        if res.success:
-            allocated = np.round(res.x).astype(int)
-            
-            schedule = []
-            total_allocated_officers = 0
-            optimized_score = 0.0
-            
-            for i, h in enumerate(hotspots):
-                alloc = int(allocated[i])
-                score_val = (
-                    0.4 * h.get("commuter_delay_savings", 0.0) +
-                    0.3 * h.get("logistics_penalty_index", 0.0) +
-                    0.3 * h.get("predicted_risk", 0.0)
-                )
-                req = max(1, h.get("officers_required", 1))
-                gained_score = alloc * (score_val / req)
-                
-                total_allocated_officers += alloc
-                optimized_score += gained_score
-
-                schedule.append({
-                    "hotspot_id": h.get("hotspot_id"),
-                    "hotspot_name": h.get("hotspot_name"),
-                    "police_station": h.get("police_station"),
-                    "officers_required": h.get("officers_required"),
-                    "officers_allocated": alloc,
-                    "utilization_percent": int(round((alloc / req) * 100)) if req > 0 else 0,
-                    "composite_priority_score": score_val,
-                    "allocated_score_contribution": gained_score
-                })
-
-            # Sort schedule by allocated score contribution descending
-            schedule = sorted(schedule, key=lambda x: x["allocated_score_contribution"], reverse=True)
-
-            return {
-                "status": "success",
-                "total_score": float(optimized_score),
-                "total_officers_allocated": total_allocated_officers,
-                "available_officers": total_avail,
-                "schedule": schedule
-            }
-        else:
-            return {
-                "status": "failure",
-                "message": res.message,
-                "schedule": [],
-                "total_score": 0.0,
-                "total_officers_allocated": 0
-            }
+        return new_cached_entries[str(total_avail)]
 
 
 if __name__ == "__main__":

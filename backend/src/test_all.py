@@ -1,5 +1,8 @@
-import os
 import sys
+# Mask transformers to prevent PyTorch/ONNX from importing it and crashing on version mismatches
+sys.modules['transformers'] = None
+
+import os
 import torch
 
 # Add src to python path
@@ -10,6 +13,35 @@ from road_network import construct_graph
 from model import STGATModel
 from gis_layer import analyze_spatial_hotspots
 from recommendation_engine import generate_enforcement_recommendations
+
+def test_timezone_conversion():
+    print("\n--- Testing PST to IST Timezone Correction ---")
+    import pandas as pd
+    
+    # Test cases: 
+    # 1. 2023-11-20 19:00:00 (PST, UTC-8) -> Should convert to 2023-11-21 08:30:00 IST (+13.5 hours)
+    # 2. 2024-04-08 06:00:00 (PDT, UTC-7) -> Should convert to 2024-04-08 18:30:00 IST (+12.5 hours)
+    test_dates = [
+        "2023-11-20 19:00:00+00",  # Input string representing 19:00 clock time (assumed PST)
+        "2024-04-08 06:00:00+00",  # Input string representing 06:00 clock time (assumed PDT)
+    ]
+    df = pd.DataFrame({"created_datetime": test_dates})
+    
+    df['created_datetime_str'] = df['created_datetime'].astype(str).str.replace(r'(\+\d{2}:?\d{2}|\+\d{2}|Z)$', '', regex=True)
+    df['created_datetime_naive'] = pd.to_datetime(df['created_datetime_str'], format='mixed', errors='coerce')
+    df['created_ist'] = df['created_datetime_naive'].dt.tz_localize('America/Los_Angeles', ambiguous='NaT', nonexistent='NaT').dt.tz_convert('Asia/Kolkata')
+    
+    # Verification
+    print("Converted IST Timestamps:")
+    for idx, row in df.iterrows():
+        print(f"  Raw: {row['created_datetime']} -> Converted IST: {row['created_ist']}")
+        
+    t1 = df.loc[0, 'created_ist']
+    t2 = df.loc[1, 'created_ist']
+    
+    assert t1.hour == 8 and t1.minute == 30, f"Expected 08:30 IST for PST conversion, got {t1.strftime('%H:%M')}"
+    assert t2.hour == 18 and t2.minute == 30, f"Expected 18:30 IST for PDT conversion, got {t2.strftime('%H:%M')}"
+    print("PST to IST Timezone conversion check: PASSED")
 
 def test_pipeline_and_graph():
     print("\n--- Testing Data Pipeline and Graph Construction ---")
@@ -26,9 +58,11 @@ def test_pipeline_and_graph():
     
     # Run pipeline operations manually on subset
     df_subset = df_subset[df_subset['validation_status'] != 'rejected']
-    df_subset['created_datetime'] = pd.to_datetime(df_subset['created_datetime'], errors='coerce')
-    df_subset = df_subset.dropna(subset=['created_datetime'])
-    df_subset['created_ist'] = df_subset['created_datetime'].dt.tz_convert('Asia/Kolkata')
+    df_subset['created_datetime_str'] = df_subset['created_datetime'].astype(str).str.replace(r'(\+\d{2}:?\d{2}|\+\d{2}|Z)$', '', regex=True)
+    df_subset['created_datetime_naive'] = pd.to_datetime(df_subset['created_datetime_str'], format='mixed', errors='coerce')
+    df_subset = df_subset.dropna(subset=['created_datetime_naive'])
+    df_subset['created_ist'] = df_subset['created_datetime_naive'].dt.tz_localize('America/Los_Angeles', ambiguous='NaT', nonexistent='NaT').dt.tz_convert('Asia/Kolkata')
+    df_subset = df_subset.dropna(subset=['created_ist'])
     df_subset['hour'] = df_subset['created_ist'].dt.hour
     df_subset['dayofweek'] = df_subset['created_ist'].dt.dayofweek
     df_subset['month'] = df_subset['created_ist'].dt.month
@@ -120,6 +154,7 @@ if __name__ == "__main__":
     import pandas as pd
     print("Starting automated system tests...")
     try:
+        test_timezone_conversion()
         test_pipeline_and_graph()
         test_model()
         test_gis_and_recommendations()

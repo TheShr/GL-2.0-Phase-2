@@ -212,12 +212,26 @@ export const Route = createFileRoute("/api/data")({
           const avgCapacityRecovered = scheduleList.slice(0, 10).reduce((sum, s) => sum + s.capacity_reduction_rcf, 0) / Math.min(10, totalHotspots || 1) * 100;
           const totalSavings = scheduleList.reduce((sum, s) => sum + s.total_commuter_time_saved_hours, 0);
 
+          const constantsRaw = await readTelemetryFile("constants.json");
+          let slaBreachMultiplier = 1.4;
+          let slaCostMultiplier = 250.0;
+          if (constantsRaw) {
+            try {
+              const constantsData = JSON.parse(constantsRaw);
+              slaBreachMultiplier = constantsData.sla_breach_multiplier ?? 1.4;
+              slaCostMultiplier = constantsData.sla_cost_multiplier_inr ?? 250.0;
+              console.log(`[API] Loaded SLA multipliers from constants.json: breach=${slaBreachMultiplier}, cost=${slaCostMultiplier}`);
+            } catch (err) {
+              console.error("Failed to parse constants.json, using defaults: ", err);
+            }
+          }
+
           // Calculate Flipkart SLA breaches avoided dynamically
           const totalSlaBreaches = scheduleList.reduce((sum, s) => {
-            const breaches = Math.round(s.total_commuter_time_saved_hours * 1.4 * s.logistics_weight);
+            const breaches = Math.round(s.total_commuter_time_saved_hours * slaBreachMultiplier * s.logistics_weight);
             return sum + breaches;
           }, 0);
-          const totalCostSavings = totalSlaBreaches * 250.0;
+          const totalCostSavings = totalSlaBreaches * slaCostMultiplier;
 
           const fallbackRoutes = [
             {

@@ -33,10 +33,112 @@ def get_road_profile(police_station):
             'lanes': 1
         }
 
+def simulate_corridor_ctm(L_corridor, q_demand, C_base, rcf, lanes, duration_hours=0.5):
+    """
+    Simulates a corridor using the dynamic Cell Transmission Model (Daganzo formulation).
+    Incorporates smoothed Greenshields speed-density transitions via sigmoid blending.
+    """
+    V_free = 40.0         # km/h free-flow speed
+    w = 15.0              # km/h backward shockwave speed
+    rho_jam_lane = 150.0  # jam density per lane (veh/km)
+    rho_jam = rho_jam_lane * lanes
+    
+    dt_sec = 15.0
+    dt = dt_sec / 3600.0  # hours
+    L_cell = V_free * dt  # 0.1667 km
+    
+    num_cells = max(3, int(np.round(L_corridor / L_cell)))
+    L_cell = L_corridor / num_cells
+    
+    # Solve Greenshields quadratic to get initial equilibrium density:
+    # q_demand = V_free * rho * (1 - rho/rho_jam)
+    coeff_c = (q_demand * rho_jam) / V_free
+    discriminant = (rho_jam ** 2) - (4.0 * coeff_c)
+    if discriminant >= 0:
+        rho_init = (rho_jam - np.sqrt(discriminant)) / 2.0
+    else:
+        rho_init = rho_jam / 2.0
+        
+    densities = np.full(num_cells, rho_init)
+    
+    # Capacity bottleneck cell in the middle of segment
+    hotspot_cell = num_cells // 2
+    cell_capacities = np.full(num_cells, C_base)
+    cell_capacities[hotspot_cell] = C_base * (1.0 - rcf)
+    
+    def get_sending_receiving(rho, cell_cap):
+        rho_crit = rho_jam / 2.0
+        # Sigmoid blending around critical density to smooth transition
+        weight = 1.0 / (1.0 + np.exp(0.15 * (rho - rho_crit)))
+        
+        q_free = V_free * rho * (1.0 - rho / rho_jam) if rho_jam > 0 else 0.0
+        q_cong = w * (rho_jam - rho) if rho_jam > 0 else 0.0
+        q_smooth = weight * q_free + (1.0 - weight) * q_cong
+        
+        # S: Sending capability (limited by flow capacity and available vehicles)
+        S = min(cell_cap * dt, q_smooth * dt) if rho <= rho_crit else cell_cap * dt
+        # R: Receiving capability (limited by flow capacity and available spaces)
+        R = min(cell_cap * dt, q_smooth * dt) if rho > rho_crit else cell_cap * dt
+        return S, R
+        
+    num_steps = int(np.round(duration_hours / dt))
+    total_vehicles_in_system = 0.0
+    
+    for step in range(num_steps):
+        S, R = [], []
+        for i in range(num_cells):
+            s, r = get_sending_receiving(densities[i], cell_capacities[i])
+            S.append(s)
+            R.append(r)
+            
+        Q = np.zeros(num_cells + 1)
+        # Input boundary
+        Q[0] = min(q_demand * dt, R[0])
+        # Cell-to-cell flows
+        for i in range(1, num_cells):
+            Q[i] = min(S[i-1], R[i])
+        # Output boundary
+        Q[num_cells] = S[num_cells-1]
+        
+        # Density updates
+        for i in range(num_cells):
+            delta_n = Q[i] - Q[i+1]
+            densities[i] += delta_n / L_cell
+            densities[i] = max(0.0, min(rho_jam, densities[i]))
+            
+        total_vehicles_in_system += np.sum(densities * L_cell)
+        
+    avg_veh = total_vehicles_in_system / num_steps
+    avg_travel_time_hours = avg_veh / q_demand if q_demand > 0 else L_corridor / V_free
+    return avg_travel_time_hours * 60.0
+
 def generate_enforcement_recommendations(clusters_csv_path, output_dir="output"):
     print("Loading hotspots for recommendation engine analysis...")
     df = pd.read_csv(clusters_csv_path)
     
+    # Load parameters from constants.json if available
+    commuter_delay_threshold = 1500.0
+    logistics_penalty_threshold = 0.45
+    constriction_coef_default = 0.3
+    
+    possible_paths = [
+        os.path.join(output_dir, "constants.json"),
+        os.path.join("output", "constants.json"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "output", "constants.json")
+    ]
+    for p in possible_paths:
+        if os.path.exists(p):
+            try:
+                with open(p, "r") as f:
+                    constants_data = json.load(f)
+                    commuter_delay_threshold = constants_data.get("commuter_delay_savings_threshold", 1500.0)
+                    logistics_penalty_threshold = constants_data.get("logistics_penalty_threshold", 0.45)
+                    constriction_coef_default = constants_data.get("constriction_coef", 0.3)
+                    print(f"Loaded constants from {p}: delay_thresh={commuter_delay_threshold}, log_thresh={logistics_penalty_threshold}, constr={constriction_coef_default}")
+                    break
+            except Exception as e:
+                print(f"Error loading constants from {p}: {e}")
+
     # Initialize Mappls Service
     from mappls_service import MapplsService
     mappls = MapplsService()
@@ -61,25 +163,15 @@ def generate_enforcement_recommendations(clusters_csv_path, output_dir="output")
         rho_jam = rho_jam_lane * lanes
         
         # 1. Calculate travel time under normal conditions (no violations)
-        # Solve Greenshields quadratic equation: q_demand = V_free * rho * (1 - rho/rho_jam)
-        # a = 1, b = -rho_jam, c = (q_demand * rho_jam) / V_free
-        coeff_c_normal = (q_demand * rho_jam) / V_free
-        discriminant_normal = (rho_jam ** 2) - (4.0 * coeff_c_normal)
-        
-        if discriminant_normal >= 0:
-            rho_normal = (rho_jam - np.sqrt(discriminant_normal)) / 2.0
-        else:
-            rho_normal = rho_jam / 2.0
-            
-        v_normal = V_free * (1.0 - (rho_normal / rho_jam))
-        t_normal = (1.0 / v_normal) * 60.0  # minutes per km
+        # Use Cell Transmission Model (CTM) simulation for normal conditions (rcf = 0)
+        t_normal = simulate_corridor_ctm(L_corridor=1.0, q_demand=q_demand, C_base=C_base, rcf=0.0, lanes=lanes)
         
         # 2. Physics Layer Mapping: Risk -> Capacity Loss (RCF)
         # Use forecasted risk index from GNN/XGBoost hybrid if available, else fallback to historical counts
         predicted_risk = row['predicted_risk'] if 'predicted_risk' in df.columns else min(1.0, row['total_violations'] / 45000.0)
         
         # Segment-specific physical constriction coefficient (mean size footprint scaled by lanes)
-        constriction_coef = (row['total_capacity_loss'] / row['total_violations']) / lanes if row['total_violations'] > 0 else 0.3
+        constriction_coef = (row['total_capacity_loss'] / row['total_violations']) / lanes if row['total_violations'] > 0 else constriction_coef_default
         
         # Physics capacity choke factor calculation with road slope penalty:
         slope = float(row['slope']) if 'slope' in df.columns else 0.0
@@ -87,30 +179,10 @@ def generate_enforcement_recommendations(clusters_csv_path, output_dir="output")
         rcf = min(0.50, predicted_risk * constriction_coef + slope_penalty)
         C_congested = C_base * (1.0 - rcf)
         
-        # 3. Congestion Delay Calculations
-        rho_jam_reduced = rho_jam * (1.0 - rcf)
+        # 3. Congestion Delay Calculations using dynamic CTM
+        t_congested_total = simulate_corridor_ctm(L_corridor=1.0, q_demand=q_demand, C_base=C_base, rcf=rcf, lanes=lanes)
         
-        if q_demand > C_congested:
-            # Bottleneck queue propagation upstream
-            rho_congested = rho_jam_reduced / 2.0
-            v_congested = V_free * (1.0 - (rho_congested / rho_jam_reduced))
-            t_congested_segment = (1.0 / v_congested) * 60.0
-            delay_queue = ((q_demand - C_congested) / (2.0 * C_congested)) * 60.0
-            t_congested_total = t_congested_segment + delay_queue
-        else:
-            # Under critical threshold, solve Greenshields for higher density
-            coeff_c_congested = (q_demand * rho_jam_reduced) / V_free
-            discriminant_congested = (rho_jam_reduced ** 2) - (4.0 * coeff_c_congested)
-            
-            if discriminant_congested >= 0:
-                rho_congested = (rho_jam_reduced - np.sqrt(discriminant_congested)) / 2.0
-            else:
-                rho_congested = rho_jam_reduced / 2.0
-                
-            v_congested = V_free * (1.0 - (rho_congested / rho_jam_reduced))
-            t_congested_total = (1.0 / v_congested) * 60.0
-            delay_queue = 0.0
-            
+        # 4. priority calculation
         delay_savings_per_vehicle = max(0.0, t_congested_total - t_normal)
         total_delay_savings_hours = (delay_savings_per_vehicle / 60.0) * q_demand
         
@@ -146,8 +218,8 @@ def generate_enforcement_recommendations(clusters_csv_path, output_dir="output")
                 eta_traffic = mappls.get_route_eta(start_lat, start_lon, end_lat, end_lon, traffic=True)
                 eta_freeflow = mappls.get_route_eta(start_lat, start_lon, end_lat, end_lon, traffic=False)
                 
-                dur_traffic = eta_traffic.get("duration", 0.0)
-                dur_freeflow = eta_freeflow.get("duration", 0.0)
+                dur_traffic = eta_traffic.get("duration", 0.0) if eta_traffic else 0.0
+                dur_freeflow = eta_freeflow.get("duration", 0.0) if eta_freeflow else 0.0
                 
                 live_delay_min = max(0.0, (dur_traffic - dur_freeflow) / 60.0)
                 print(f"[Mappls Route ETA] Successfully computed live delay of {live_delay_min:.2f} mins for {route_name} Corridor.")
@@ -171,8 +243,8 @@ def generate_enforcement_recommendations(clusters_csv_path, output_dir="output")
         
         # 4. Multi-factor priority score calculation including Logistics Penalty Index (LPI)
         # Weighting: 40% travel delay savings, 30% logistics impact (LPI), 30% risk volume
-        delay_component = min(1.0, total_delay_savings_hours / 1500.0) * 40.0
-        logistics_component = min(1.0, lpi / 0.45) * 30.0
+        delay_component = min(1.0, total_delay_savings_hours / commuter_delay_threshold) * 40.0
+        logistics_component = min(1.0, lpi / logistics_penalty_threshold) * 30.0
         risk_component = predicted_risk * 30.0
         
         priority_score = delay_component + logistics_component + risk_component

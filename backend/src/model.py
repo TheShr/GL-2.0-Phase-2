@@ -125,10 +125,8 @@ class STGATModel(nn.Module):
         spatial_out_gat = self.gat(x_flat, edge_index)
         assert spatial_out_gat.shape == (batch_size * seq_len, num_nodes, self.spatial_hidden), f"GAT output shape mismatch, got {spatial_out_gat.shape}"
         
-        # 2. Adaptive Spatial branch: Learn dynamic spatiotemporal dependencies
-        # Compute A_adaptive = Softmax(ReLU(E_1 @ E_2.T), dim=-1)
-        # Shape: [num_nodes, num_nodes]
         A_adaptive = F.softmax(F.relu(torch.matmul(self.E1, self.E2.t())), dim=-1)
+        self.last_A_adaptive = A_adaptive  # Cache for regularization
         assert A_adaptive.shape == (num_nodes, num_nodes), f"A_adaptive shape mismatch, got {A_adaptive.shape}"
         
         # Project node features to hidden space

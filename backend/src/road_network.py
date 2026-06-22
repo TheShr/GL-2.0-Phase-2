@@ -198,7 +198,8 @@ def encode_polyline(points):
     return "".join(encoded)
 
 def construct_graph(cleaned_df_path, output_dir="output"):
-    print("Constructing high-fidelity road network graph from predefined corridors...")
+    output_dir = os.path.abspath(output_dir)
+    print(f"Constructing high-fidelity road network graph from predefined corridors. Output: {output_dir}")
     
     # 1. Generate interpolated reference nodes
     all_ref_nodes = []
@@ -223,7 +224,10 @@ def construct_graph(cleaned_df_path, output_dir="output"):
             lat1, lon1 = interpolated[idx - 1]['lat'], interpolated[idx - 1]['lon']
             lat2, lon2 = interpolated[idx]['lat'], interpolated[idx]['lon']
             dist_m = np.sqrt((lat1 - lat2)**2 + (lon1 - lon2)**2) * 111000.0
-            slope = (el2 - el1) / dist_m if dist_m > 0 else 0.0
+            if el1 is None or el2 is None:
+                slope = 0.0
+            else:
+                slope = (el2 - el1) / dist_m if dist_m > 0 else 0.0
             slope = max(-0.15, min(0.15, slope))  # Clip incline to [-15%, +15%]
             slopes.append(slope)
 
@@ -294,13 +298,24 @@ def construct_graph(cleaned_df_path, output_dir="output"):
                     nodes_df.loc[global_idx, f"{category}_count"] += 1
 
     # 1.6 Snap ELOC_HUBS delivery warehouses (e.g. Flipkart hubs, courier drop boxes)
-    ELOC_HUBS = {
-        'WFD123': {'name': 'Whitefield Warehouse', 'lat': 12.978, 'lon': 77.728},
-        'ECY456': {'name': 'Electronic City Warehouse', 'lat': 12.852, 'lon': 77.675},
-        'KOR789': {'name': 'Koramangala Warehouse', 'lat': 12.932, 'lon': 77.618},
-        'HEB012': {'name': 'Hebbal Hub', 'lat': 13.025, 'lon': 77.589},
-        'MAJ345': {'name': 'Majestic Logistics Hub', 'lat': 12.976, 'lon': 77.573}
-    }
+    import json
+    config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "output", "hubs_config.json")
+    ELOC_HUBS = {}
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, "r") as f:
+                config_data = json.load(f)
+                ELOC_HUBS = config_data.get("ELOC_HUBS", {})
+        except Exception as e:
+            print(f"Error loading hubs config: {e}")
+    if not ELOC_HUBS:
+        ELOC_HUBS = {
+            'WFD123': {'name': 'Whitefield Warehouse', 'lat': 12.978, 'lon': 77.728},
+            'ECY456': {'name': 'Electronic City Warehouse', 'lat': 12.852, 'lon': 77.675},
+            'KOR789': {'name': 'Koramangala Warehouse', 'lat': 12.932, 'lon': 77.618},
+            'HEB012': {'name': 'Hebbal Hub', 'lat': 13.025, 'lon': 77.589},
+            'MAJ345': {'name': 'Majestic Logistics Hub', 'lat': 12.976, 'lon': 77.573}
+        }
     print("Snapping ELOC_HUBS delivery warehouses to closest nodes...")
     all_coords = nodes_df[['latitude', 'longitude']].values
     for eloc_id, hub in ELOC_HUBS.items():
@@ -397,15 +412,24 @@ def construct_graph(cleaned_df_path, output_dir="output"):
     nodes_df['police_station'] = nodes_df['police_station'].fillna("Unknown")
     
     # 5. POI Density Calculation using Gaussian decay centered on major hubs
-    HUBS = {
-        'Majestic': {'lat': 12.978, 'lon': 77.571, 'commercial': 0.9, 'transit': 1.0, 'dining': 0.6, 'corporate': 0.4},
-        'Shivajinagar': {'lat': 12.985, 'lon': 77.599, 'commercial': 1.0, 'transit': 0.8, 'dining': 0.8, 'corporate': 0.3},
-        'Koramangala': {'lat': 12.934, 'lon': 77.624, 'commercial': 0.7, 'transit': 0.5, 'dining': 1.0, 'corporate': 0.8},
-        'Indiranagar': {'lat': 12.978, 'lon': 77.641, 'commercial': 0.8, 'transit': 0.4, 'dining': 1.0, 'corporate': 0.6},
-        'Electronic City': {'lat': 12.845, 'lon': 77.663, 'commercial': 0.4, 'transit': 0.6, 'dining': 0.5, 'corporate': 1.0},
-        'Whitefield': {'lat': 12.969, 'lon': 77.750, 'commercial': 0.5, 'transit': 0.5, 'dining': 0.6, 'corporate': 1.0},
-        'Hebbal': {'lat': 13.035, 'lon': 77.597, 'commercial': 0.3, 'transit': 0.9, 'dining': 0.4, 'corporate': 0.5}
-    }
+    HUBS = {}
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, "r") as f:
+                config_data = json.load(f)
+                HUBS = config_data.get("HUBS", {})
+        except Exception as e:
+            print(f"Error loading hubs config: {e}")
+    if not HUBS:
+        HUBS = {
+            'Majestic': {'lat': 12.978, 'lon': 77.571, 'commercial': 0.9, 'transit': 1.0, 'dining': 0.6, 'corporate': 0.4},
+            'Shivajinagar': {'lat': 12.985, 'lon': 77.599, 'commercial': 1.0, 'transit': 0.8, 'dining': 0.8, 'corporate': 0.3},
+            'Koramangala': {'lat': 12.934, 'lon': 77.624, 'commercial': 0.7, 'transit': 0.5, 'dining': 1.0, 'corporate': 0.8},
+            'Indiranagar': {'lat': 12.978, 'lon': 77.641, 'commercial': 0.8, 'transit': 0.4, 'dining': 1.0, 'corporate': 0.6},
+            'Electronic City': {'lat': 12.845, 'lon': 77.663, 'commercial': 0.4, 'transit': 0.6, 'dining': 0.5, 'corporate': 1.0},
+            'Whitefield': {'lat': 12.969, 'lon': 77.750, 'commercial': 0.5, 'transit': 0.5, 'dining': 0.6, 'corporate': 1.0},
+            'Hebbal': {'lat': 13.035, 'lon': 77.597, 'commercial': 0.3, 'transit': 0.9, 'dining': 0.4, 'corporate': 0.5}
+        }
     
     poi_comm, poi_trans, poi_dine, poi_corp = [], [], [], []
     sigma = 0.0135 # ~1.5 km decay scale

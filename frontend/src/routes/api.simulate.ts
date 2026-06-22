@@ -92,8 +92,8 @@ export const Route = createFileRoute("/api/simulate")({
             const V_free = 40.0; // km/h free-flow speed
             const C_base = road_capacity || 2000.0;
             const q_demand = 0.90 * C_base; // High demand scenario
-
-            const rho_jam = (4.0 * C_base) / V_free;
+            const lanes = 2; // Default lanes for what-if
+            const rho_jam = 150.0 * lanes;
 
             const risk_reduction_coeff = Math.exp(-0.25 * officers_deployed);
             const updated_risk = Math.max(0.0, Math.min(1.0, current_risk * risk_reduction_coeff));
@@ -101,41 +101,82 @@ export const Route = createFileRoute("/api/simulate")({
             const rcf_before = Math.min(0.45, current_risk * 0.45);
             const rcf_after = Math.min(0.45, updated_risk * 0.45);
 
-            const solveWhatIfGreenshields = (rcf: number) => {
-              const local_rho_jam = rho_jam * (1.0 - rcf);
-              const local_C = C_base * (1.0 - rcf);
-
-              let t_total = 0.0;
-              let delay_q = 0.0;
-
-              if (q_demand > local_C) {
-                const rho_c = local_rho_jam / 2.0;
-                const v_c = V_free * (1.0 - (rho_c / local_rho_jam));
-                const t_segment = (1.0 / v_c) * 60.0;
-                delay_q = ((q_demand - local_C) / (2.0 * local_C)) * 60.0;
-                t_total = t_segment + delay_q;
+            const simulateCorridorCTM = (L_corridor: number, q_demand_val: number, C_base_val: number, rcf: number) => {
+              const w = 15.0; // backward shockwave speed
+              const local_rho_jam = 150.0 * lanes;
+              const dt_sec = 15.0;
+              const dt = dt_sec / 3600.0;
+              const L_cell_base = V_free * dt;
+              
+              const num_cells = Math.max(3, Math.round(L_corridor / L_cell_base));
+              const L_cell = L_corridor / num_cells;
+              
+              const coeff_c = (q_demand_val * local_rho_jam) / V_free;
+              const discriminant = (local_rho_jam ** 2) - (4.0 * coeff_c);
+              let rho_init = 0.0;
+              if (discriminant >= 0) {
+                rho_init = (local_rho_jam - Math.sqrt(discriminant)) / 2.0;
               } else {
-                const c_coeff = (q_demand * local_rho_jam) / V_free;
-                const discriminant = (local_rho_jam ** 2) - (4.0 * c_coeff);
-                let rho_val = 0.0;
-
-                if (discriminant >= 0) {
-                  rho_val = (local_rho_jam - Math.sqrt(discriminant)) / 2.0;
-                } else {
-                  rho_val = local_rho_jam / 2.0;
-                }
-
-                const v_val = V_free * (1.0 - (rho_val / local_rho_jam));
-                t_total = (1.0 / v_val) * 60.0;
+                rho_init = local_rho_jam / 2.0;
               }
-              return { travel_time: t_total, queuing_delay: delay_q };
+              
+              const densities = new Float64Array(num_cells).fill(rho_init);
+              const hotspot_cell = Math.floor(num_cells / 2);
+              const cell_capacities = new Float64Array(num_cells).fill(C_base_val);
+              cell_capacities[hotspot_cell] = C_base_val * (1.0 - rcf);
+              
+              const getSendingReceiving = (rho: number, cell_cap: number) => {
+                const rho_crit = local_rho_jam / 2.0;
+                const weight = 1.0 / (1.0 + Math.exp(0.15 * (rho - rho_crit)));
+                
+                const q_free = local_rho_jam > 0 ? V_free * rho * (1.0 - rho / local_rho_jam) : 0.0;
+                const q_cong = local_rho_jam > 0 ? w * (local_rho_jam - rho) : 0.0;
+                const q_smooth = weight * q_free + (1.0 - weight) * q_cong;
+                
+                const S = rho <= rho_crit ? Math.min(cell_cap * dt, q_smooth * dt) : cell_cap * dt;
+                const R = rho > rho_crit ? Math.min(cell_cap * dt, q_smooth * dt) : cell_cap * dt;
+                return { S, R };
+              };
+              
+              const duration_hours = 0.5;
+              const num_steps = Math.round(duration_hours / dt);
+              let total_vehicles = 0.0;
+              
+              for (let step = 0; step < num_steps; step++) {
+                const S = new Float64Array(num_cells);
+                const R = new Float64Array(num_cells);
+                for (let i = 0; i < num_cells; i++) {
+                  const sr = getSendingReceiving(densities[i], cell_capacities[i]);
+                  S[i] = sr.S;
+                  R[i] = sr.R;
+                }
+                
+                const Q = new Float64Array(num_cells + 1);
+                Q[0] = Math.min(q_demand_val * dt, R[0]);
+                for (let i = 1; i < num_cells; i++) {
+                  Q[i] = Math.min(S[i - 1], R[i]);
+                }
+                Q[num_cells] = S[num_cells - 1];
+                
+                for (let i = 0; i < num_cells; i++) {
+                  const delta_n = Q[i] - Q[i + 1];
+                  densities[i] += delta_n / L_cell;
+                  densities[i] = Math.max(0.0, Math.min(local_rho_jam, densities[i]));
+                }
+                
+                let sum_densities = 0.0;
+                for (let i = 0; i < num_cells; i++) {
+                  sum_densities += densities[i];
+                }
+                total_vehicles += sum_densities * L_cell;
+              }
+              
+              const avg_veh = total_vehicles / num_steps;
+              return q_demand_val > 0 ? (avg_veh / q_demand_val) * 60.0 : (L_corridor / V_free) * 60.0;
             };
 
-            const results_before = solveWhatIfGreenshields(rcf_before);
-            const results_after = solveWhatIfGreenshields(rcf_after);
-
-            const t_before = results_before.travel_time;
-            const t_after = results_after.travel_time;
+            const t_before = simulateCorridorCTM(1.0, q_demand, C_base, rcf_before);
+            const t_after = simulateCorridorCTM(1.0, q_demand, C_base, rcf_after);
 
             const congestion_reduction_percent = t_before > 0 ? ((t_before - t_after) / t_before) * 100.0 : 0.0;
             const capacity_recovery_percent = (rcf_before - rcf_after) * 100.0;
@@ -228,41 +269,82 @@ export const Route = createFileRoute("/api/simulate")({
           const reduction_coefficient = 1.0 - (0.25 * patrols_deployed + 0.50 * tow_trucks);
           const rcf_new = Math.max(0.0, Math.min(0.45, original_rcf * reduction_coefficient));
 
-          const solveGreenshields = (capacity: number, rcf: number) => {
-            const local_rho_jam = rho_jam * (1.0 - rcf);
-            const local_C = C_base * (1.0 - rcf);
-
-            let t_total = 0.0;
-            let delay_q = 0.0;
-
-            if (q_demand > local_C) {
-              const rho_c = local_rho_jam / 2.0;
-              const v_c = V_free * (1.0 - (rho_c / local_rho_jam));
-              const t_segment = (1.0 / v_c) * 60.0;
-              delay_q = ((q_demand - local_C) / (2.0 * local_C)) * 60.0;
-              t_total = t_segment + delay_q;
+          const simulateCorridorCTM = (L_corridor: number, q_demand_val: number, C_base_val: number, rcf: number) => {
+            const w = 15.0; // backward shockwave speed
+            const local_rho_jam = 150.0 * lanes;
+            const dt_sec = 15.0;
+            const dt = dt_sec / 3600.0;
+            const L_cell_base = V_free * dt;
+            
+            const num_cells = Math.max(3, Math.round(L_corridor / L_cell_base));
+            const L_cell = L_corridor / num_cells;
+            
+            const coeff_c = (q_demand_val * local_rho_jam) / V_free;
+            const discriminant = (local_rho_jam ** 2) - (4.0 * coeff_c);
+            let rho_init = 0.0;
+            if (discriminant >= 0) {
+              rho_init = (local_rho_jam - Math.sqrt(discriminant)) / 2.0;
             } else {
-              const c_coeff = (q_demand * local_rho_jam) / V_free;
-              const discriminant = (local_rho_jam ** 2) - (4.0 * c_coeff);
-              let rho_val = 0.0;
-
-              if (discriminant >= 0) {
-                rho_val = (local_rho_jam - Math.sqrt(discriminant)) / 2.0;
-              } else {
-                rho_val = local_rho_jam / 2.0;
-              }
-
-              const v_val = V_free * (1.0 - (rho_val / local_rho_jam));
-              t_total = (1.0 / v_val) * 60.0;
+              rho_init = local_rho_jam / 2.0;
             }
-            return { travel_time: t_total, queuing_delay: delay_q };
+            
+            const densities = new Float64Array(num_cells).fill(rho_init);
+            const hotspot_cell = Math.floor(num_cells / 2);
+            const cell_capacities = new Float64Array(num_cells).fill(C_base_val);
+            cell_capacities[hotspot_cell] = C_base_val * (1.0 - rcf);
+            
+            const getSendingReceiving = (rho: number, cell_cap: number) => {
+              const rho_crit = local_rho_jam / 2.0;
+              const weight = 1.0 / (1.0 + Math.exp(0.15 * (rho - rho_crit)));
+              
+              const q_free = local_rho_jam > 0 ? V_free * rho * (1.0 - rho / local_rho_jam) : 0.0;
+              const q_cong = local_rho_jam > 0 ? w * (local_rho_jam - rho) : 0.0;
+              const q_smooth = weight * q_free + (1.0 - weight) * q_cong;
+              
+              const S = rho <= rho_crit ? Math.min(cell_cap * dt, q_smooth * dt) : cell_cap * dt;
+              const R = rho > rho_crit ? Math.min(cell_cap * dt, q_smooth * dt) : cell_cap * dt;
+              return { S, R };
+            };
+            
+            const duration_hours = 0.5;
+            const num_steps = Math.round(duration_hours / dt);
+            let total_vehicles = 0.0;
+            
+            for (let step = 0; step < num_steps; step++) {
+              const S = new Float64Array(num_cells);
+              const R = new Float64Array(num_cells);
+              for (let i = 0; i < num_cells; i++) {
+                const sr = getSendingReceiving(densities[i], cell_capacities[i]);
+                S[i] = sr.S;
+                R[i] = sr.R;
+              }
+              
+              const Q = new Float64Array(num_cells + 1);
+              Q[0] = Math.min(q_demand_val * dt, R[0]);
+              for (let i = 1; i < num_cells; i++) {
+                Q[i] = Math.min(S[i - 1], R[i]);
+              }
+              Q[num_cells] = S[num_cells - 1];
+              
+              for (let i = 0; i < num_cells; i++) {
+                const delta_n = Q[i] - Q[i + 1];
+                densities[i] += delta_n / L_cell;
+                densities[i] = Math.max(0.0, Math.min(local_rho_jam, densities[i]));
+              }
+              
+              let sum_densities = 0.0;
+              for (let i = 0; i < num_cells; i++) {
+                sum_densities += densities[i];
+              }
+              total_vehicles += sum_densities * L_cell;
+            }
+            
+            const avg_veh = total_vehicles / num_steps;
+            return q_demand_val > 0 ? (avg_veh / q_demand_val) * 60.0 : (L_corridor / V_free) * 60.0;
           };
 
-          const before_results = solveGreenshields(C_base, original_rcf);
-          const t_before = before_results.travel_time;
-
-          const after_results = solveGreenshields(C_base, rcf_new);
-          const t_after = after_results.travel_time;
+          const t_before = simulateCorridorCTM(1.0, q_demand, C_base, original_rcf);
+          const t_after = simulateCorridorCTM(1.0, q_demand, C_base, rcf_new);
 
           const delay_savings_per_vehicle = Math.max(0.0, t_before - t_after);
           const total_commuter_time_saved_hours = (delay_savings_per_vehicle / 60.0) * q_demand;

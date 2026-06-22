@@ -18,13 +18,18 @@ def load_and_clean_data(csv_path):
     print(f"Filtered out rejected rows. Remaining: {filtered_rows} ({initial_rows - filtered_rows} rows removed).")
 
     # 2. Parse created_datetime and convert to Indian Standard Time (IST)
-    print("Converting timestamps to IST...")
-    df['created_datetime'] = pd.to_datetime(df['created_datetime'], errors='coerce')
-    # Drop rows with unparseable timestamps (only 5 in raw dataset)
-    df = df.dropna(subset=['created_datetime'])
+    print("Converting timestamps to IST (remedying US Pacific timezone shift)...")
+    # Convert to string and strip '+00' (or other offsets) to obtain the clock time in PST/PDT
+    df['created_datetime_str'] = df['created_datetime'].astype(str).str.replace(r'(\+\d{2}:?\d{2}|\+\d{2}|Z)$', '', regex=True)
+    df['created_datetime_naive'] = pd.to_datetime(df['created_datetime_str'], format='mixed', errors='coerce')
+    # Drop rows with unparseable timestamps
+    df = df.dropna(subset=['created_datetime_naive'])
     
-    # Convert timezone to Asia/Kolkata
-    df['created_ist'] = df['created_datetime'].dt.tz_convert('Asia/Kolkata')
+    # Localize to America/Los_Angeles (which correctly accounts for PST/PDT and DST boundaries)
+    # and then convert to Asia/Kolkata (IST)
+    df['created_ist'] = df['created_datetime_naive'].dt.tz_localize('America/Los_Angeles', ambiguous='NaT', nonexistent='NaT').dt.tz_convert('Asia/Kolkata')
+    # Drop any rows that became NaT due to DST transitions
+    df = df.dropna(subset=['created_ist'])
     
     # Extract temporal features
     df['hour'] = df['created_ist'].dt.hour

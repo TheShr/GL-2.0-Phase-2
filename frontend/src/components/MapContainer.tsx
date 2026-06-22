@@ -872,13 +872,31 @@ export default function MapContainer({ hotspots, selectedId, onSelectHotspot, ro
 
         const enforcementStatus = h.priority_score >= 15.0 ? "Tier 1 · Critical Enforcement" : (h.priority_score >= 3.0 ? "Tier 2 · Active Patrol" : "Tier 3 · Monitor Zone");
 
+        const isGeocodeMissing = !h.nearest_landmark || h.nearest_landmark.toLowerCase().includes("coordinates") || h.nearest_landmark.toLowerCase().includes("unavailable");
+        const isPoiMissing = h.commercial_density === null || h.commercial_density === undefined || isNaN(h.commercial_density) || (h.commercial_density === 0 && h.transit_density === 0);
+        const isElevationMissing = h.elevation === null || h.elevation === undefined || isNaN(h.elevation) || h.elevation === 900;
+
+        const missingFields = [];
+        if (isGeocodeMissing) missingFields.push("Geocoding");
+        if (isPoiMissing) missingFields.push("POI");
+        if (isElevationMissing) missingFields.push("Elevation");
+
+        const dataWarningBadge = missingFields.length > 0
+          ? `<div style="padding:3.5px 8px; background:#DC2626; color:#FFFFFF; font-size:7px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; border-radius:9999px; display:flex; align-items:center; gap:2px;">
+               ⚠️ Data Unavailable (${missingFields.join(', ')})
+             </div>`
+          : '';
+
         const popupHtml = `
           <div class="glass-popup" style="
             font-family:'Inter',sans-serif; padding:12px 14px; min-width:220px; max-width:260px; color:#1E293B;
             background:transparent; border:none; box-shadow:none;
           ">
-            <div style="display:inline-block; padding:3.5px 8px; background:#0F172A; color:#F1F5F9; font-size:7px; font-weight:800; text-transform:uppercase; letter-spacing:0.15em; border-radius:9999px; margin-bottom:8px;">
-              ${enforcementStatus}
+            <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px;">
+              <div style="padding:3.5px 8px; background:#0F172A; color:#F1F5F9; font-size:7px; font-weight:800; text-transform:uppercase; letter-spacing:0.15em; border-radius:9999px;">
+                ${enforcementStatus}
+              </div>
+              ${dataWarningBadge}
             </div>
             <div style="font-size:12px; font-weight:800; color:#0F172A; margin-bottom:4px; line-height:1.35;">
               ${cleanLandmark(h.nearest_landmark, h.road_class)}
@@ -1096,13 +1114,31 @@ export default function MapContainer({ hotspots, selectedId, onSelectHotspot, ro
 
           const enforcementStatus = h.priority_score >= 15.0 ? "Tier 1 · Critical Enforcement" : (h.priority_score >= 3.0 ? "Tier 2 · Active Patrol" : "Tier 3 · Monitor Zone");
 
+          const isGeocodeMissing = !h.nearest_landmark || h.nearest_landmark.toLowerCase().includes("coordinates") || h.nearest_landmark.toLowerCase().includes("unavailable");
+          const isPoiMissing = h.commercial_density === null || h.commercial_density === undefined || isNaN(h.commercial_density) || (h.commercial_density === 0 && h.transit_density === 0);
+          const isElevationMissing = h.elevation === null || h.elevation === undefined || isNaN(h.elevation) || h.elevation === 900;
+
+          const missingFields = [];
+          if (isGeocodeMissing) missingFields.push("Geocoding");
+          if (isPoiMissing) missingFields.push("POI");
+          if (isElevationMissing) missingFields.push("Elevation");
+
+          const dataWarningBadge = missingFields.length > 0
+            ? `<div style="padding:3.5px 8px; background:#DC2626; color:#FFFFFF; font-size:7px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; border-radius:9999px; display:flex; align-items:center; gap:2px;">
+                 ⚠️ Data Unavailable (${missingFields.join(', ')})
+               </div>`
+            : '';
+
           const popupHtml = `
             <div class="glass-popup" style="
               font-family:'Inter',sans-serif; padding:12px 14px; min-width:220px; max-width:260px; color:#1E293B;
               background:transparent; border:none; box-shadow:none;
             ">
-              <div style="display:inline-block; padding:3.5px 8px; background:#0F172A; color:#F1F5F9; font-size:7px; font-weight:800; text-transform:uppercase; letter-spacing:0.15em; border-radius:9999px; margin-bottom:8px;">
-                ${enforcementStatus}
+              <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px;">
+                <div style="padding:3.5px 8px; background:#0F172A; color:#F1F5F9; font-size:7px; font-weight:800; text-transform:uppercase; letter-spacing:0.15em; border-radius:9999px;">
+                  ${enforcementStatus}
+                </div>
+                ${dataWarningBadge}
               </div>
               <div style="font-size:12px; font-weight:800; color:#0F172A; margin-bottom:4px; line-height:1.35;">
                 ${cleanLandmark(h.nearest_landmark, h.road_class)}

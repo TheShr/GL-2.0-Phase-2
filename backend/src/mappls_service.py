@@ -31,6 +31,7 @@ class MapplsService:
     def __init__(self):
         self.token = os.environ.get("MAPPLS_TOKEN", "rysmqsqzhyrdjzzdhxthpgdljebmkdipyjmb")
         self.timeout = 3.0  # Strict timeout limit of 3.0 seconds
+        self.degraded = False
 
         # Predefined Flipkart Logistics Routes
         self.FLIPKART_ROUTES = {
@@ -52,6 +53,11 @@ class MapplsService:
             }
         }
 
+    def _check_status(self, status_code):
+        if status_code in [401, 403, 404, 412]:
+            logger.warning(f"Mappls API returned status {status_code}. Marking service as degraded to prevent slow timeouts and connection errors.")
+            self.degraded = True
+
     def snap_to_road(self, points):
         """
         Accepts a list of (lat, lon) coordinates, batches them to max 100 points,
@@ -60,12 +66,18 @@ class MapplsService:
         """
         if not points:
             return []
+        if self.degraded:
+            return list(points)
 
         snapped_all = []
         batch_size = 100
 
         for i in range(0, len(points), batch_size):
             batch = points[i:i + batch_size]
+            if self.degraded:
+                snapped_all.extend(batch)
+                continue
+
             # Mappls format is longitude,latitude separated by semicolons
             pts_str = ";".join([f"{lon:.6f},{lat:.6f}" for lat, lon in batch])
             
@@ -78,6 +90,7 @@ class MapplsService:
             try:
                 logger.info(f"Querying Mappls Snap to Road for batch of size {len(batch)}...")
                 response = requests.get(url, params=params, timeout=self.timeout)
+                self._check_status(response.status_code)
                 
                 # Check status code
                 if response.status_code == 429:
@@ -116,6 +129,9 @@ class MapplsService:
         and returns a human-readable landmark/address string.
         Falls back to a coordinates description if the API call fails or rate limits.
         """
+        if self.degraded:
+            return f"Near coordinates ({lat:.4f}, {lon:.4f})"
+
         url = "https://search.mappls.com/search/address/rev-geocode"
         params = {
             "access_token": self.token,
@@ -127,6 +143,7 @@ class MapplsService:
         try:
             logger.info(f"Querying Mappls Reverse Geocode for ({lat:.4f}, {lon:.4f})...")
             response = requests.get(url, params=params, timeout=self.timeout)
+            self._check_status(response.status_code)
             
             if response.status_code == 429:
                 raise Exception("HTTP 429: Rate Limit Exceeded")
@@ -167,6 +184,9 @@ class MapplsService:
         Appends traffic=true/traffic=false parameters.
         Returns travel delay in minutes, or None if the API fails.
         """
+        if self.degraded:
+            raise Exception("Mappls Service is degraded")
+
         source = f"{start_lon:.6f},{start_lat:.6f}"
         destination = f"{end_lon:.6f},{end_lat:.6f}"
 
@@ -188,6 +208,7 @@ class MapplsService:
             
             # 1. Fetch live traffic duration
             resp_t = requests.get(traffic_url, params=params_traffic, timeout=self.timeout)
+            self._check_status(resp_t.status_code)
             if resp_t.status_code == 429:
                 raise Exception("HTTP 429: Rate Limit Exceeded")
             elif resp_t.status_code == 503:
@@ -196,7 +217,10 @@ class MapplsService:
             data_t = resp_t.json()
 
             # 2. Fetch free-flow baseline duration
+            if self.degraded:
+                raise Exception("Mappls Service degraded during call")
             resp_f = requests.get(freeflow_url, params=params_freeflow, timeout=self.timeout)
+            self._check_status(resp_f.status_code)
             resp_f.raise_for_status()
             data_f = resp_f.json()
 
@@ -238,6 +262,9 @@ class MapplsService:
         Maps a police station to its nearest designated Flipkart Logistics Route and
         queries the traffic delay. Returns delay in minutes, or None if not matching/fails.
         """
+        if self.degraded:
+            return None
+
         matched_route = None
         station_lower = station.lower()
 
@@ -267,6 +294,9 @@ class MapplsService:
         Calculates an NxN matrix of travel durations (seconds) between locations.
         locations: list of dicts with name, lat, lon.
         """
+        if self.degraded:
+            raise Exception("Mappls Service degraded")
+
         import numpy as np
         pts = ";".join([f"{loc['lon']:.6f},{loc['lat']:.6f}" for loc in locations])
         url = f"https://route.mappls.com/route/dm/distance_matrix_traffic/driving/{pts}"
@@ -277,6 +307,7 @@ class MapplsService:
         try:
             logger.info(f"Querying Mappls Distance Matrix Matrix for {len(locations)} hubs...")
             response = requests.get(url, params=params, timeout=self.timeout)
+            self._check_status(response.status_code)
             response.raise_for_status()
             data = response.json()
             # Mappls returns matrix format
@@ -301,11 +332,41 @@ class MapplsService:
                         mock_durations[i][j] = float((dist_km / 25.0) * 3600.0)
             return mock_durations
 
+    def _decode_polyline(self, polyline_str):
+        """
+        Decodes a Google Polyline string into a list of (lat, lon) coordinates.
+        """
+        index, lat, lng = 0, 0, 0
+        coordinates = []
+        changes = {'latitude': 0, 'longitude': 0}
+        while index < len(polyline_str):
+            for unit in ['latitude', 'longitude']:
+                shift, result = 0, 0
+                while True:
+                    byte = ord(polyline_str[index]) - 63
+                    index += 1
+                    result |= (byte & 0x1f) << shift
+                    shift += 5
+                    if not byte >= 0x20:
+                        break
+                if (result & 1):
+                    changes[unit] = ~(result >> 1)
+                else:
+                    changes[unit] = (result >> 1)
+            lat += changes['latitude']
+            lng += changes['longitude']
+            coordinates.append((lat / 100000.0, lng / 100000.0))
+        return coordinates
+
     def get_route_eta(self, start_lat, start_lon, end_lat, end_lon, traffic=True):
         """
         Queries Mappls Routing API (Route ETA API Traffic or Route ADV API Non-Traffic).
         Returns route details including duration (seconds), distance (meters), and geometry (polyline).
+        Returns None on failure (honest degradation).
         """
+        if self.degraded:
+            return None
+
         coords_str = f"{start_lon:.6f},{start_lat:.6f};{end_lon:.6f},{end_lat:.6f}"
         url = f"https://route.mappls.com/route/v1/driving/{coords_str}"
         params = {
@@ -319,6 +380,7 @@ class MapplsService:
         try:
             logger.info(f"Querying Mappls Routing API (traffic={traffic})...")
             response = requests.get(url, params=params, timeout=self.timeout)
+            self._check_status(response.status_code)
             response.raise_for_status()
             data = response.json()
             routes = data.get("routes", [])
@@ -330,23 +392,50 @@ class MapplsService:
                 }
             raise Exception("No routes found in response")
         except Exception as e:
-            logger.warning(f"Routing API (traffic={traffic}) failed: {e}. Using mock estimation.")
-            import math
-            dy = end_lat - start_lat
-            dx = end_lon - start_lon
-            dist_km = math.sqrt(dx*dx + dy*dy) * 111.0
-            speed = 25.0 if traffic else 40.0
-            dur_sec = (dist_km / speed) * 3600.0
-            return {
-                "duration": dur_sec,
-                "distance": dist_km * 1000.0,
-                "geometry": ""
-            }
+            logger.warning(f"Routing API (traffic={traffic}) failed: {e}. Returning None.")
+            return None
 
     def get_pois_along_route(self, path_polyline, category="dining", buffer=50):
         """
         Queries Mappls POI Along the Route API.
+        Uses a local geohash-based directory cache to prevent rate-limiting.
+        Returns None on failure (honest degradation).
         """
+        import hashlib
+        import json
+        
+        try:
+            coords = self._decode_polyline(path_polyline)
+            if coords:
+                avg_lat = sum(c[0] for c in coords) / len(coords)
+                avg_lon = sum(c[1] for c in coords) / len(coords)
+                gh_prefix = encode_geohash(avg_lat, avg_lon, 4)
+            else:
+                gh_prefix = "unknown"
+        except Exception:
+            gh_prefix = "unknown"
+            
+        cache_dir = "output/mappls_cache/poi"
+        os.makedirs(cache_dir, exist_ok=True)
+        cache_path = os.path.join(cache_dir, f"{gh_prefix}.json")
+        
+        cache_data = {}
+        if os.path.exists(cache_path):
+            try:
+                with open(cache_path, "r") as f:
+                    cache_data = json.load(f)
+            except Exception:
+                pass
+                
+        poly_hash = hashlib.md5(path_polyline.encode('utf-8')).hexdigest()
+        key = f"{poly_hash}_{category}_{buffer}"
+        
+        if key in cache_data:
+            return cache_data[key]
+            
+        if self.degraded:
+            return None
+
         url = "https://atlas.mappls.com/api/places/alongroute"
         params = {
             "access_token": self.token,
@@ -357,17 +446,25 @@ class MapplsService:
         try:
             logger.info(f"Querying Mappls POI Along Route for category {category}...")
             response = requests.get(url, params=params, timeout=self.timeout)
+            self._check_status(response.status_code)
             response.raise_for_status()
             data = response.json()
-            return data.get("suggestedPOIs", [])
+            pois = data.get("suggestedPOIs", [])
+            cache_data[key] = pois
+            with open(cache_path, "w") as f:
+                json.dump(cache_data, f, indent=2)
+            return pois
         except Exception as e:
-            logger.warning(f"POI Along Route failed for category {category}: {e}. Returning empty list.")
-            return []
+            logger.warning(f"POI Along Route failed for category {category}: {e}. Returning None.")
+            return None
 
     def autosuggest(self, query, bias_lat=12.9716, bias_lon=77.5946):
         """
         Queries Mappls Autosuggest API.
         """
+        if self.degraded:
+            return []
+
         url = "https://atlas.mappls.com/api/places/geocode/autocomplete"
         params = {
             "access_token": self.token,
@@ -377,6 +474,7 @@ class MapplsService:
         try:
             logger.info(f"Querying Mappls Autosuggest for '{query}'...")
             response = requests.get(url, params=params, timeout=self.timeout)
+            self._check_status(response.status_code)
             response.raise_for_status()
             data = response.json()
             return data.get("suggestedLocations", [])
@@ -388,6 +486,9 @@ class MapplsService:
         """
         Queries Mappls Place Detail API for an eLoc ID.
         """
+        if self.degraded:
+            return {}
+
         url = f"https://atlas.mappls.com/api/places/detail/{eloc}"
         params = {
             "access_token": self.token
@@ -395,6 +496,7 @@ class MapplsService:
         try:
             logger.info(f"Querying Mappls Place Detail for eLoc '{eloc}'...")
             response = requests.get(url, params=params, timeout=self.timeout)
+            self._check_status(response.status_code)
             response.raise_for_status()
             return response.json()
         except Exception as e:
@@ -403,25 +505,31 @@ class MapplsService:
 
     def get_elevation(self, lat, lon):
         """
-        Queries Mappls Elevation API or falls back to a deterministic terrain height model for Bengaluru.
-        Uses a local file cache to prevent rate-limiting and accelerate execution.
+        Queries Mappls Elevation API or returns None if API fails and cache misses.
+        Uses a local geohash-based directory cache to prevent rate-limiting.
         """
-        import os
-        key = f"{lat:.5f},{lon:.5f}"
-        if not hasattr(self, '_elevation_cache'):
-            self._elevation_cache = {}
-            import json
+        import json
+        
+        gh_prefix = encode_geohash(lat, lon, 4)
+        cache_dir = "output/mappls_cache/elevation"
+        os.makedirs(cache_dir, exist_ok=True)
+        cache_path = os.path.join(cache_dir, f"{gh_prefix}.json")
+        
+        cache_data = {}
+        if os.path.exists(cache_path):
             try:
-                if os.path.exists("output/elevation_cache.json"):
-                    with open("output/elevation_cache.json", "r") as f:
-                        self._elevation_cache = json.load(f)
+                with open(cache_path, "r") as f:
+                    cache_data = json.load(f)
             except Exception:
                 pass
+                
+        key = f"{lat:.5f},{lon:.5f}"
+        if key in cache_data:
+            return float(cache_data[key])
+            
+        if self.degraded:
+            return None
 
-        if key in self._elevation_cache:
-            return float(self._elevation_cache[key])
-
-        import numpy as np
         url = "https://apis.mappls.com/elevation"
         params = {
             "access_token": self.token,
@@ -430,26 +538,55 @@ class MapplsService:
         try:
             logger.info(f"Querying Mappls Elevation for ({lat:.4f}, {lon:.4f})...")
             response = requests.get(url, params=params, timeout=self.timeout)
+            self._check_status(response.status_code)
             response.raise_for_status()
             data = response.json()
             results = data.get("results", [])
             if results:
                 val = float(results[0].get("elevation", 900.0))
-                self._elevation_cache[key] = val
-                try:
-                    import json
-                    os.makedirs("output", exist_ok=True)
-                    with open("output/elevation_cache.json", "w") as f:
-                        json.dump(self._elevation_cache, f)
-                except Exception:
-                    pass
+                cache_data[key] = val
+                with open(cache_path, "w") as f:
+                    json.dump(cache_data, f, indent=2)
                 return val
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Mappls Elevation API failed for ({lat:.4f}, {lon:.4f}): {e}. Returning None.")
+            
+        return None
 
-        # Deterministic terrain model for Bengaluru:
-        val = 900.0 + 35.0 * np.sin(lat * 80.0) + 25.0 * np.cos(lon * 65.0)
-        self._elevation_cache[key] = float(val)
-        return float(val)
+def encode_geohash(latitude, longitude, precision=4):
+    """
+    Standard Base32 Geohash Encoder.
+    """
+    lat_interval = (-90.0, 90.0)
+    lon_interval = (-180.0, 180.0)
+    base32 = "0123456789bcdefghjkmnpqrstuvwxyz"
+    geohash = []
+    bits = [16, 8, 4, 2, 1]
+    bit = 0
+    ch = 0
+    even = True
+    while len(geohash) < precision:
+        if even:
+            mid = (lon_interval[0] + lon_interval[1]) / 2.0
+            if longitude > mid:
+                ch |= bits[bit]
+                lon_interval = (mid, lon_interval[1])
+            else:
+                lon_interval = (lon_interval[0], mid)
+        else:
+            mid = (lat_interval[0] + lat_interval[1]) / 2.0
+            if latitude > mid:
+                ch |= bits[bit]
+                lat_interval = (mid, lat_interval[1])
+            else:
+                lat_interval = (lat_interval[0], mid)
+        even = not even
+        if bit < 4:
+            bit += 1
+        else:
+            geohash.append(base32[ch])
+            bit = 0
+            ch = 0
+    return "".join(geohash)
 
 

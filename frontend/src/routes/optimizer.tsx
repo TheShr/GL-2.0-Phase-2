@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { SectionHeader, TabStrip, Eyebrow, Readout } from "@/components/hud";
 import { useTelemetry } from "@/lib/telemetry-context";
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/optimizer")({
   component: Optimizer,
 });
 
-const TABS = ["Before/After", "Intervention Simulator", "Deployment Frontier", "Scenario Builder", "Counterfactual"];
+const TABS = ["Before/After", "Intervention Simulator", "Deployment Frontier", "Live Dispatch Tracking", "Scenario Builder", "Counterfactual"];
 
 function Optimizer() {
   const [tab, setTab] = useState(TABS[0]);
@@ -27,6 +27,7 @@ function Optimizer() {
       {tab === "Before/After" && <BeforeAfter />}
       {tab === "Intervention Simulator" && <Simulator />}
       {tab === "Deployment Frontier" && <Frontier />}
+      {tab === "Live Dispatch Tracking" && <LiveDispatchTracking />}
       {tab === "Scenario Builder" && <ScenarioBuilder />}
       {tab === "Counterfactual" && <Counterfactual />}
     </div>
@@ -124,7 +125,9 @@ const simulateIntervention = (
       rcf,
       delaySavings,
       lpi,
-      score
+      score,
+      t_congested,
+      t_normal
     };
   };
 
@@ -154,6 +157,30 @@ const simulateIntervention = (
     }
   }
 
+  const runFrankWolfe = (h: any, x: number) => {
+    const m = getHotspotMetrics(h, x);
+    const profile = getRoadProfile(h.police_station);
+    const q_demand = profile.q_demand;
+    const t_normal = m.t_normal;
+    const t_congested = m.t_congested;
+    
+    const t_detour_base = t_normal * 1.6 + 8.0;
+    
+    let f1 = q_demand;
+    for (let k = 0; k < 6; k++) {
+      const ratio = f1 / q_demand;
+      const t_prim = t_normal + (t_congested - t_normal) * Math.pow(ratio, 4);
+      const t_detour = t_detour_base + 3.0 * Math.pow(1 - ratio, 2);
+      
+      const y1 = t_prim < t_detour ? q_demand : 0;
+      const alpha = 2.0 / (k + 2.0);
+      f1 = f1 + alpha * (y1 - f1);
+    }
+    
+    const ratio_final = f1 / q_demand;
+    return t_normal + (t_congested - t_normal) * Math.pow(ratio_final, 4);
+  };
+
   let totalRiskBefore = 0;
   let totalRiskAfter = 0;
   let totalLpiBefore = 0;
@@ -175,7 +202,9 @@ const simulateIntervention = (
     totalRcfBefore += hotspotsList[i].capacity_reduction_rcf || 0;
     totalRcfAfter += mAfter.rcf;
 
-    const delaySavedVehicle = Math.max(0, mBefore.delaySavings - mAfter.delaySavings);
+    const tBeforeEquil = runFrankWolfe(hotspotsList[i], 0);
+    const tAfterEquil = runFrankWolfe(hotspotsList[i], allocations[i]);
+    const delaySavedVehicle = Math.max(0, tBeforeEquil - tAfterEquil);
     totalDelaySavedMin += delaySavedVehicle;
   }
 
@@ -846,5 +875,217 @@ function StreetLevelView({ state }: { state: "before" | "after" }) {
         </text>
       </g>
     </svg>
+  );
+}
+
+const STATION_CENTROIDS: Record<string, [number, number]> = {
+  "Upparpet": [12.978, 77.571],
+  "Cubbon Park": [12.975, 77.607],
+  "HSR Layout": [12.917, 77.622],
+  "Bellandur": [12.930, 77.680],
+  "Adugodi": [12.937, 77.631],
+  "Halasur": [12.973, 77.617],
+  "Shivajinagar": [12.986, 77.597],
+  "Koramangala": [12.934, 77.624],
+  "Hebbal": [13.035, 77.597],
+  "Hebbala": [13.035, 77.597],
+  "Indiranagar": [12.978, 77.641],
+  "HAL Old Airport": [12.956, 77.648],
+  "Kasturi Nagar": [13.007, 77.649],
+  "Unknown": [12.9716, 77.5946]
+};
+
+function LiveDispatchTracking() {
+  const { hotspots: rawHotspots } = useTelemetry();
+  const [speed, setSpeed] = useState(1);
+
+  const activeHotspots = useMemo(() => {
+    return rawHotspots.length > 0 ? rawHotspots.slice(0, 4) : [];
+  }, [rawHotspots]);
+
+  const [officers, setOfficers] = useState(() => {
+    let list: any[] = [];
+    let id = 1;
+    activeHotspots.forEach((h) => {
+      list.push({
+        id: `Ofc-${id++}`,
+        name: `Officer BTP-${100 + id}`,
+        station: h.police_station || "Unknown",
+        destination: h.corridor || "Junction",
+        lat: STATION_CENTROIDS[h.police_station]?.[0] || 12.9716,
+        lon: STATION_CENTROIDS[h.police_station]?.[1] || 77.5946,
+        startLat: STATION_CENTROIDS[h.police_station]?.[0] || 12.9716,
+        startLon: STATION_CENTROIDS[h.police_station]?.[1] || 77.5946,
+        destLat: h.lat || 12.9716,
+        destLon: h.lon || 77.5946,
+        status: "Station Pool",
+        progress: 0,
+        logs: [`[INFO] Unit initialized at ${h.police_station || "Unknown"} station pool.`]
+      });
+    });
+    return list;
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setOfficers(prev => prev.map(o => {
+        if (o.status !== "En Route") return o;
+        
+        const newProgress = Math.min(100, o.progress + 4 * speed);
+        const curLat = o.startLat + (o.destLat - o.startLat) * (newProgress / 100);
+        const curLon = o.startLon + (o.destLon - o.startLon) * (newProgress / 100);
+        
+        let newStatus = o.status;
+        let newLogs = [...o.logs];
+        
+        if (newProgress >= 100) {
+          newStatus = "Arrived";
+          newLogs.push(`[SYSTEM] Arrived at ${o.destination}. Awaiting officer confirmation.`);
+        } else if (Math.floor(newProgress) % 20 === 0 && Math.floor(newProgress) !== Math.floor(o.progress)) {
+          newLogs.push(`[GPS] Telemetry update: (${curLat.toFixed(5)}, ${curLon.toFixed(5)}) at speed 22 km/h.`);
+        }
+
+        return {
+          ...o,
+          progress: newProgress,
+          lat: curLat,
+          lon: curLon,
+          status: newStatus,
+          logs: newLogs
+        };
+      }));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [speed]);
+
+  const handleDispatch = (id: string) => {
+    setOfficers(prev => prev.map(o => {
+      if (o.id !== id) return o;
+      return {
+        ...o,
+        status: "En Route",
+        progress: 0,
+        logs: [...o.logs, `[DISPATCH] Commander ordered patrol to proceed to ${o.destination}. GPS tracking started.`]
+      };
+    }));
+  };
+
+  const handleConfirmArrival = (id: string) => {
+    setOfficers(prev => prev.map(o => {
+      if (o.id !== id) return o;
+      return {
+        ...o,
+        status: "Active Enforcement",
+        logs: [...o.logs, `[CONFIRMATION] Arrival verified by officer. Enforcement active (Towing KA-03-MM-4491, issuing fines).`]
+      };
+    }));
+  };
+
+  const handleRecall = (id: string) => {
+    setOfficers(prev => prev.map(o => {
+      if (o.id !== id) return o;
+      return {
+        ...o,
+        status: "Station Pool",
+        progress: 0,
+        lat: o.startLat,
+        lon: o.startLon,
+        logs: [...o.logs, `[RECALL] Unit recalled back to station pool.`]
+      };
+    }));
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center bg-surface border border-hairline p-3 rounded-lg glass">
+        <div>
+          <Eyebrow>BTP Officer Telemetry Command</Eyebrow>
+          <p className="text-xs text-text-muted mt-0.5">Live patrol dispatch and arrival validation checks</p>
+          <p className="text-[10px] text-amber-500/85 mt-1.5 flex items-center gap-1 font-mono">
+            <span>⚠️</span> <span>Note: This is currently a mock simulation. In production, this can be integrated with live officer GPS beacons and BTP dispatch resources.</span>
+          </p>
+        </div>
+        <div className="flex items-center gap-2 font-mono">
+          <span className="text-[10px] text-text-muted font-semibold uppercase">Sim Speed:</span>
+          {([1, 5, 10] as const).map(s => (
+            <button
+              key={s}
+              onClick={() => setSpeed(s)}
+              className={`px-2 py-0.5 text-xs font-mono border rounded ${speed === s ? "border-signal text-signal font-bold bg-signal/10" : "border-hairline text-text-muted bg-transparent cursor-pointer"}`}
+            >
+              {s}x
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        {officers.map((o) => (
+          <div key={o.id} className="border border-hairline bg-surface p-4 space-y-3 font-mono rounded-lg glass">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-sm font-bold text-text-primary">{o.name}</span>
+                <div className="text-[10px] text-text-muted mt-0.5">{o.station} PS ➔ {o.destination}</div>
+              </div>
+              <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+                o.status === "Station Pool" ? "bg-slate-500/10 text-slate-500 border border-slate-500/20" :
+                o.status === "En Route" ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" :
+                o.status === "Arrived" ? "bg-blue-500/10 text-blue-500 border border-blue-500/20 animate-pulse" :
+                "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+              }`}>
+                {o.status}
+              </span>
+            </div>
+
+            {o.status === "En Route" && (
+              <div className="space-y-1">
+                <div className="flex justify-between text-[10px] text-text-muted">
+                  <span>GPS Tracking ({o.progress.toFixed(0)}%)</span>
+                  <span>{o.lat.toFixed(4)}, {o.lon.toFixed(4)}</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-900 rounded overflow-hidden">
+                  <div className="h-full bg-signal transition-all duration-300" style={{ width: `${o.progress}%` }} />
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              {o.status === "Station Pool" && (
+                <button
+                  onClick={() => handleDispatch(o.id)}
+                  className="flex-1 bg-signal text-primary-foreground py-1.5 rounded text-[10px] uppercase font-bold border-none cursor-pointer flex items-center justify-center gap-1 hover:opacity-90"
+                >
+                  Dispatch Unit
+                </button>
+              )}
+              {(o.status === "En Route" || o.status === "Arrived") && (
+                <button
+                  onClick={() => handleConfirmArrival(o.id)}
+                  className={`flex-1 py-1.5 rounded text-[10px] uppercase font-bold border-none cursor-pointer flex items-center justify-center gap-1 hover:opacity-90 ${
+                    o.status === "Arrived" ? "bg-emerald-600 text-white animate-pulse" : "bg-blue-600 text-white"
+                  }`}
+                >
+                  Confirm Arrival
+                </button>
+              )}
+              {o.status !== "Station Pool" && (
+                <button
+                  onClick={() => handleRecall(o.id)}
+                  className="border border-hairline py-1.5 px-3 rounded text-[10px] uppercase text-text-muted hover:text-text-primary bg-surface/50 cursor-pointer"
+                >
+                  Recall
+                </button>
+              )}
+            </div>
+
+            <div className="border border-hairline p-2 bg-slate-950/40 rounded max-h-24 overflow-y-auto space-y-1">
+              {o.logs.slice(-3).map((l: string, idx: number) => (
+                <div key={idx} className="text-[9px] text-text-muted leading-tight truncate">{l}</div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

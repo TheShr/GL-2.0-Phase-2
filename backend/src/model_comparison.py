@@ -19,7 +19,7 @@ def evaluate_baselines():
     nodes_df = pd.read_csv(nodes_csv)
     
     # 1. Temporal Split (Nov 2023 - Feb 2024 Train, March - April 2024 Test)
-    df['created_ist'] = pd.to_datetime(df['created_ist'])
+    df['created_ist'] = pd.to_datetime(df['created_ist'], format='mixed')
     split_date = pd.to_datetime("2024-03-01").tz_localize("Asia/Kolkata")
     
     train_df = df[df['created_ist'] < split_date].copy()

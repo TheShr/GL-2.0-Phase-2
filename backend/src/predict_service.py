@@ -48,6 +48,71 @@ def get_nodes_df():
         _nodes_df['node_id'] = _nodes_df['node_id'].astype(str)
         _nodes_df.set_index('node_id', inplace=True, drop=False)
         print(f"[Predict Service] Nodes database loaded from {csv_path} with {len(_nodes_df)} nodes.")
+        
+        # Precompute static spatial lags right here
+        try:
+            import json
+            edges_path = os.path.join(output_dir, "graph_edges.json")
+            if os.path.exists(edges_path):
+                with open(edges_path, 'r') as f:
+                    edges_data = json.load(f)
+                num_nodes = len(_nodes_df)
+                node_ids = _nodes_df['node_id'].tolist()
+                node_to_idx = {nid: i for i, nid in enumerate(node_ids)}
+                
+                lats = _nodes_df['latitude'].values
+                lons = _nodes_df['longitude'].values
+                D = np.sqrt((lats[:, None] - lats[None, :])**2 + (lons[:, None] - lons[None, :])**2)
+                W = 1.0 / (D + 1e-4)
+                np.fill_diagonal(W, 0.0)
+                W_sum = W.sum(axis=1, keepdims=True)
+                W_norm = np.where(W_sum > 0, W / W_sum, 0.0)
+                
+                adj_list = {i: [] for i in range(num_nodes)}
+                for edge in edges_data:
+                    src_idx = node_to_idx.get(edge['source'])
+                    tgt_idx = node_to_idx.get(edge['target'])
+                    if src_idx is not None and tgt_idx is not None:
+                        adj_list[src_idx].append(tgt_idx)
+                        
+                adj_list_2nd = {i: [] for i in range(num_nodes)}
+                for u in range(num_nodes):
+                    visited = {u}
+                    for v in adj_list[u]:
+                        visited.add(v)
+                    for v in adj_list[u]:
+                        for w in adj_list[v]:
+                            if w not in visited:
+                                adj_list_2nd[u].append(w)
+                                visited.add(w)
+                                
+                A_1st = np.zeros((num_nodes, num_nodes))
+                for i in range(num_nodes):
+                    neighbors = adj_list[i]
+                    if len(neighbors) > 0:
+                        A_1st[i, neighbors] = 1.0 / len(neighbors)
+                    else:
+                        A_1st[i, i] = 1.0
+                        
+                A_2nd = np.zeros((num_nodes, num_nodes))
+                for i in range(num_nodes):
+                    neighbors = adj_list_2nd[i]
+                    if len(neighbors) > 0:
+                        A_2nd[i, neighbors] = 1.0 / len(neighbors)
+                    else:
+                        A_2nd[i, i] = 1.0
+                        
+                # 906 shifts in historical dataset (Nov 10, 2023 - Apr 9, 2024), scaling counts by / 20.0
+                viols = _nodes_df['total_violations'].values / (906.0 * 20.0)
+                
+                _nodes_df['lag_1'] = viols @ A_1st.T
+                _nodes_df['lag_2'] = viols @ A_2nd.T
+                _nodes_df['lag_dist'] = viols @ W_norm.T
+                print("[Predict Service] Spatial lags precomputed successfully.")
+            else:
+                print(f"[Predict Service] Warning: graph_edges.json not found at {edges_path}. Spatial lags won't be calculated.")
+        except Exception as e:
+            print(f"[Predict Service] Error precomputing spatial lags: {e}")
     return _nodes_df
 
 def build_feature_vector(node_row, hour, day_of_week, scooter_count, car_count, auto_count, total_count=None, lanes_override=None):
@@ -124,27 +189,19 @@ def predict_scenario(node_id, hour, day_of_week, scooter_count, car_count, auto_
         total_count=total_count, lanes_override=lanes_override
     )
     
+    # Extract static neighbor spatial lags precomputed for this node
+    lag_1 = float(node_row.get('lag_1', 0.0))
+    lag_2 = float(node_row.get('lag_2', 0.0))
+    lag_dist = float(node_row.get('lag_dist', 0.0))
+    
+    # Append to construct the 17-feature vector expected by the XGBoost fallback model
+    features_17 = np.append(features, [lag_1, lag_2, lag_dist])
+    
     # 3. Perform live XGBoost prediction
-    # model.predict takes a 2D array: [1, 14]
-    xgb_pred_raw = float(model.predict(features.reshape(1, -1))[0])
+    # model.predict takes a 2D array: [1, 17]
+    xgb_pred_raw = float(model.predict(features_17.reshape(1, -1))[0])
     
     # Inverse log-transform predictions if the model was trained with log-transform
-    # In train.py: target_risk = np.log1p(target_risk) and we inverse-transform via expm1
-    # stgat_model is log-transformed by default in train_model(log_transform=True)
-    # The offline evaluation logic does: if log_transform: xgb_risk = np.expm1(xgb_risk)
-    # Let's inspect train_xgboost_fallback_model in train.py:
-    # "Y_train_tab = Y_train.numpy().flatten()", where Y_train is already log-transformed if log_transform=True!
-    # So yes, XGBoost predictions must be inverse-transformed via expm1 if trained on log-transformed targets.
-    # In our project config, log_transform is True. Let's make sure we expm1 it!
-    # To be extremely safe: since risk values are in [0, 1], let's check if the raw prediction exceeds 1.0 or if we expm1.
-    # Wait, in run_inference_pipeline in train.py:
-    # "xgb_risk = xgb_model.predict(last_x_seq_tab)"
-    # "if getattr(stgat_model, 'log_transform', False): xgb_risk = np.expm1(xgb_risk)"
-    # So we apply expm1 and clip to [0, 1].
-    # Let's verify if log_transform is enabled in our model: we can assume yes, and apply expm1.
-    # Wait, can we check if the raw prediction is log-transformed?
-    # If the output values are small (e.g. log1p values are in [0, log(2)]), expm1 makes them back to [0, 1].
-    # Let's do expm1 since train_model ran with log_transform=True by default.
     xgb_pred = np.expm1(xgb_pred_raw)
     xgb_pred = float(np.clip(xgb_pred, 0.0, 1.0))
     
@@ -167,7 +224,10 @@ def predict_scenario(node_id, hour, day_of_week, scooter_count, car_count, auto_
         "dining_density": float(features[10]),
         "corporate_density": float(features[11]),
         "vulnerability_index": float(features[12]),
-        "lanes": float(features[13])
+        "lanes": float(features[13]),
+        "lag_1": lag_1,
+        "lag_2": lag_2,
+        "lag_dist": lag_dist
     }
     
     return {

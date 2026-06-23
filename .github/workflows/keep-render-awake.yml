@@ -2,7 +2,7 @@ name: Keep Render Awake
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -10,6 +10,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Ping Render
+      - name: Ping Atlas Backend
         run: |
-          curl https://atlas-gnn-backend.onrender.com/healthz
+          curl --fail --silent --show-error https://atlas-gnn-backend.onrender.com/healthz

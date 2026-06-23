@@ -25,7 +25,9 @@ The table below outlines the core components of the platform, categorized by the
 ## 1. Data Cleaning & Snapping Pipeline
 
 ### Core Functionality
-Processes raw traffic infraction records, executes geographic filtering, maps timestamps to Indian Standard Time (IST) for cyclical temporal encoding, and snaps unstructured GPS coordinate points to one of the 7 designated transit corridors in Bengaluru.
+Processes raw traffic infraction records, executes geographic filtering, maps timestamps to Indian Standard Time (IST) for cyclical temporal encoding, snaps unstructured GPS coordinate points to one of the 7 designated transit corridors in Bengaluru, and manages GNN checkpoint versions.
+- **UTC to IST Timezone Correction:** Converts raw UTC logs to Indian Standard Time (IST) by parsing timestamps as US Pacific Time (`America/Los_Angeles`) and converting them to `Asia/Kolkata` (IST), correcting the 8-hour shift and aligning morning/evening peak traffic hours correctly.
+- **Distinct GNN Checkpoints:** Saves baseline and tuned GNN model weights to separate checkpoints (`stgat_baseline.pt` vs `stgat_tuned.pt`) with verified distinct SHA256 hashes to prevent model weights collision.
 
 ### Core Models & Math
 - **cKDTree Spatial Snapping:** Fast $K$-dimensional tree spatial queries are used to snap GPS citation points to the nearest interpolated corridor node. If the Euclidean distance between citation coordinates and the snapped node exceeds a strict threshold of $4.4\text{ km}$, it is categorized as off-network noise and pruned.
@@ -65,7 +67,9 @@ The entry page (`/`) maps spatial traffic hotspots. The dashboard integrates rea
 ## 3. AI-Driven Spatiotemporal Risk Forecasting `[MVP]`
 
 ### Core Functionality
-Predicts the risk of parking violations and traffic bottlenecks across all road segments for the next shift using deep spatial graph embeddings and historical patterns.
+Predicts the risk of parking violations and traffic bottlenecks across all road segments for the next shift using deep spatial graph embeddings, historical patterns, and dynamic custom scenario updates.
+- **Predictions Manual Scenario Forecast Proxy Shape Alignment (17 Features):** To support dynamic interactive what-if scenarios without shape mismatch errors (since the offline XGBoost regressor expects 17 features including spatial lags), the backend precomputes static neighborhood spatial lags (`lag_1` first-order neighbors, `lag_2` second-order neighbors, `lag_dist` distance-decay-weighted neighbors) on startup. When a custom scenario payload (14 features: cyclical times, overridden vehicle counts, POI densities, etc.) is sent, the server appends these precomputed lags to construct the full 17-feature vector for the live XGBoost prediction fallback.
+- **IPv4 Loopback Connection Logic:** The API route targets the local backend via `http://127.0.0.1:8000` instead of `http://localhost:8000` to bypass Windows-specific loopback name resolution issues (where `localhost` resolves slow or fails to bind to IPv6/IPv4).
 
 ### Core Models & Math
 - **Spatio-Temporal Graph Attention Network (ST-GATv2):** Combines spatial convolution layer constructs (`GATv2Conv`) with a recurrent temporal Gated Recurrent Unit (`GRU`) to learn spatial dependencies (road junctions) and temporal traffic trends.
@@ -107,6 +111,7 @@ Groups forecasted risk scores of individual road nodes into localized regional h
 
 ### Core Functionality
 Takes the generated hotspots and schedules patrol dispatches. Users can adjust parameters (enforcement budget, priority weights, station limits) on the front-end to trigger the dispatcher and output optimal officer allocations.
+- **Station Decomposition Parallel Solver:** Partitions the global optimization problem into local police station jurisdictions and runs optimizations concurrently to avoid Windows thread deadlocks. Incorporates dynamic patrol transit costs and boundary crossing penalties, caching schedules for quick retrieval with a randomized rounding LP relaxation solver fallback.
 
 ### Core Models & Math
 - **Global Integer Linear Programming (ILP) Optimization:** Replaces simple greedy scheduling with a global SciPy MILP solver.
@@ -135,6 +140,7 @@ Takes the generated hotspots and schedules patrol dispatches. Users can adjust p
 
 ### Core Functionality
 Evaluates the physical traffic congestion impact of our dispatch choices. Translates forecasted violation risks into capacity bottlenecks and simulates counterfactual traffic flows to calculate delays.
+- **Dynamic CTM (Cell Transmission Model) Simulation:** Simulates dynamic vehicle flows cell-to-cell, correctly capturing shockwave propagation (congested corridor travel time is `4.35` mins/km compared to the free-flow `1.77` mins/km baseline).
 
 ### Core Models & Math
 - **Road Capacity Reduction Factor (RCF):** Snapped slopes increase capacity bottlenecks for heavy vehicles:

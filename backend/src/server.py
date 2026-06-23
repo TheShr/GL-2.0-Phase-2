@@ -79,9 +79,12 @@ if not disable_retraining:
 else:
     print("[Startup] Background GNN retraining scheduler is disabled.")
 
-@app.get("/healthz")
+@app.api_route("/healthz", methods=["GET", "HEAD"])
 def health_check():
-    return {"status": "healthy", "scheduler_active": scheduler.running if scheduler else False}
+    return {
+        "status": "healthy",
+        "scheduler_active": scheduler.running if scheduler else False
+    }
 
 # Mount output/ directory to serve generated JSON/CSV files statically
 os.makedirs("output", exist_ok=True)

@@ -23,6 +23,9 @@ export interface MappedHotspot {
     sla_breaches_avoided: number;
     cost_savings_inr: number;
   };
+  police_station?: string;
+  lat?: number;
+  lon?: number;
 }
 
 export interface MappedCorridor {
@@ -108,7 +111,10 @@ function mapActualToMockHotspot(h: any): MappedHotspot {
       { label: "Transit Density", weight: delay_pct },
       { label: "Commercial Profile", weight: logi_pct }
     ],
-    flipkart_impact: h.flipkart_impact
+    flipkart_impact: h.flipkart_impact,
+    police_station: h.police_station,
+    lat: h.lat,
+    lon: h.lon
   };
 }
 

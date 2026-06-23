@@ -119,7 +119,8 @@ export const Route = createFileRoute("/api/predict")({
         }
 
         const backendUrl = process.env.BACKEND_URL || "http://127.0.0.1:8000";
-        const targetUrl = `${backendUrl.replace(/\/$/, "")}/predict`;
+        const cleanBackendUrl = backendUrl.replace(/\/static\/?$/, "");
+        const targetUrl = `${cleanBackendUrl.replace(/\/$/, "")}/predict`;
 
         // 1. Try forwarding to the Python FastAPI backend
         try {

@@ -37,17 +37,17 @@ graph TD
 
 ### Stage 3: Vectorized AI Risk Forecasting & Tuned Loss (`backend/src/train.py`, `backend/src/model.py`)
 *   **Spatio-Temporal GAT (ST-GATv2)**: Aggregates spatial features from adjacent segments using dynamic attention coefficients (GATv2) to capture local road network topology, feeding the spatial embeddings into a temporal GRU layer.
-*   **Adaptive/Learnable Graph Topology Matrix ($A_{\text{adaptive}}$)**: Nodes construct a dynamic, data-driven spatial correlation matrix during the forward pass using learnable embeddings $E_1, E_2 \in \mathbb{R}^{\text{num\_nodes} \times 10}$:
+*   **Adaptive/Learnable Graph Topology Matrix ($A_{\text{adaptive}}$)**: Nodes construct a dynamic, data-driven spatial correlation matrix during the forward pass using learnable embeddings $E_1, E_2 \in \mathbb{R}^{\text{num nodes} \times 10}$:
     $$A_{\text{adaptive}} = \text{Softmax}(\text{ReLU}(E_1 E_2^T), \text{dim}=-1)$$
     Features are projected and propagated via a parallel GCN branch before being blended with physical GATv2Conv outputs, capturing non-local corridors and traffic spillovers.
 *   **POI-Enriched GNN Input Features**: Integrates snapped POI densities and digital address coefficients into the model feature tensor (representing static node attributes).
 *   **Vectorization Optimization**: Operations are parallelized over batch and sequence lengths using 3D tensor math and batched `scatter_add_` operations, yielding a **4x GNN training speedup (2.5s per epoch)**.
 *   **Spatial-Lag XGBoost Fallback**: Trains an XGBoost regressor using engineered spatial lags (historical violation averages of neighboring segments) as a high-precision safeguard.
 *   **Weighted Huber Loss with Node-Specific Deltas**: Replaced standard MSE loss with a custom Huber loss computed on the raw physical scale ($[0, 20]$ violations). High-density hubs get a higher delta (up to $5.0$ violations) to penalize predictions quadratically, while low-volume corridors use a linear delta ($1.0$). Node weights combine POI density and log-scaled historical violations to balance commercial zones and main transport corridors:
-    $$\text{weight}_i = 1.0 + 2.0 \times (\text{corporate\_density}_i + \text{transit\_density}_i) + 0.3 \times \log(1 + \text{total\_violations}_i)$$
+    $$\text{weight}_i = 1.0 + 2.0 \times (\text{corporate density}_i + \text{transit density}_i) + 0.3 \times \log(1 + \text{total violations}_i)$$
 *   **Target Log-Transformation**: Supports target log-transformation $y_{\text{trans}} = \log(y + 1)$ during data loading with automatic exponential inverse-transformations ($\exp(y) - 1$) in the validation and evaluation pipelines.
 *   **Synthetic Demand Multiplier (Evening Bias Correction)**: Solves the administrative shift gap where citations drop to zero during evening peak rush hours. Evaluates a dynamic, POI-blended **Vulnerability Index ($VI_i$)**:
-    $$VI_i = 0.15 \cdot \text{POI\_Comm} + 0.15 \cdot \text{POI\_Trans} + 0.15 \cdot \text{POI\_Dine\_blended} + 0.15 \cdot \text{POI\_Corp\_blended} + 0.10 \cdot \text{Retail\_Dens} + 0.10 \cdot \text{Kitchen\_Dens} + 0.10 \cdot \text{eLoc\_Dens} + 0.10 \cdot \left(\frac{1}{\text{Lanes}_i}\right)$$
+    $$VI_i = 0.15 \cdot \text{POI Comm} + 0.15 \cdot \text{POI Trans} + 0.15 \cdot \text{POI Dine blended} + 0.15 \cdot \text{POI Corp blended} + 0.10 \cdot \text{Retail Dens} + 0.10 \cdot \text{Kitchen Dens} + 0.10 \cdot \text{eLoc Dens} + 0.10 \cdot \left(\frac{1}{\text{Lanes}_i}\right)$$
     and overrides evening slots with simulated targets proportional to the segment's structural vulnerability.
 
 ### Stage 4: GIS Spatial Clustering (`backend/src/gis_layer.py`)
@@ -56,16 +56,16 @@ graph TD
 ### Stage 5: Integer Linear Programming (ILP) Patrol Dispatch (`backend/src/dispatcher.py`)
 *   **Optimization Solver**: Replaces greedy dispatch with a global SciPy MILP solver (`scipy.optimize.milp`).
 *   **Objective Function**: Maximizes the total composite priority score of selected hotspots per allocated officer:
-    $$\text{Maximize } \sum_{i} x_i \cdot \frac{0.4 \cdot C_i + 0.3 \cdot L_i + 0.3 \cdot R_i}{\text{officers\_required}_i}$$
+    $$\text{Maximize } \sum_{i} x_i \cdot \frac{0.4 \cdot C_i + 0.3 \cdot L_i + 0.3 \cdot R_i}{\text{officers required}_i}$$
     Where:
     *   $C_i$: Commuter delay savings (vehicle-hours).
     *   $L_i$: Flipkart Logistics Penalty Index (LPI).
     *   $R_i$: Predicted traffic violation risk.
     *   $x_i$: Integer number of officers allocated to hotspot $i$.
 *   **Constraints**:
-    *   **Global Patrol Capacity**: $\sum_{i} x_i \le \text{total\_available\_officers}$
-    *   **Hotspot Capacity bounds**: $0 \le x_i \le \min(\text{officers\_required}_i, \text{max\_officers\_per\_hotspot})$
-    *   **Regional Station limits**: $\sum_{i \in \text{Station}_k} x_i \le \text{station\_limit}_k$ for each police station jurisdiction $k$.
+    *   **Global Patrol Capacity**: $\sum_{i} x_i \le \text{total available officers}$
+    *   **Hotspot Capacity bounds**: $0 \le x_i \le \min(\text{officers required}_i, \text{max officers per hotspot})$
+    *   **Regional Station limits**: $\sum_{i \in \text{Station}_k} x_i \le \text{station limit}_k$ for each police station jurisdiction $k$.
 *   **Station Decomposition Parallel Solver**: Partitions the global optimization problem into local police station jurisdictions and runs optimizations concurrently to avoid Windows thread deadlocks. Incorporates dynamic patrol transit costs and boundary crossing penalties, caching schedules for quick retrieval with a randomized rounding LP relaxation solver fallback.
 
 ### Stage 6: Greenshields Macroscopic Flow & What-If Simulation Engine (`frontend/app/api/simulate/route.ts`, `backend/src/recommendation_engine.py`)
@@ -73,7 +73,7 @@ graph TD
 *   **Mitigation Performance**: Deployed officers reduce congestion risk using exponential decay:
     $$\text{Risk}_{\text{updated}} = \text{Risk} \cdot e^{-0.25 \cdot \text{officers}}$$
 *   **Slope-Adjusted Capacity Reduction (RCF)**: Capacity reduction is penalized by road inclines (slopes) representing heavy vehicle gradeability limitations:
-    $$\text{RCF} = \min(0.50, \text{Risk} \cdot \text{constriction\_coef} + 1.5 \cdot |\text{Slope}|)$$
+    $$\text{RCF} = \min(0.50, \text{Risk} \cdot \text{constriction coef} + 1.5 \cdot |\text{Slope}|)$$
 *   **Speed & Travel Time Calculations**:
     *   Jam density is scaled by RCF: $\rho_{\text{jam, new}} = \rho_{\text{jam}} \cdot (1 - RCF_{\text{new}})$
     *   Capacity is scaled: $C_{\text{new}} = C_{\text{base}} \cdot (1 - RCF_{\text{new}})$

@@ -77,9 +77,9 @@ Predicts the risk of parking violations and traffic bottlenecks across all road 
   $$A_{\text{adaptive}} = \text{Softmax}(\text{ReLU}(E_1 E_2^T))$$
 - **Weighted Huber Loss with Node-Specific Deltas ($\delta_i$):** Replaces basic MSE with a robust regression target loss. Nodes in high-density corridors have larger thresholds ($\delta_{\text{high}} = 5.0$) while low-density segments use $\delta_{\text{low}} = 1.0$. Losses are weighted based on commercial density and historical violations:
   $$L_{\delta_i}(y_i, \hat{y}_i) = \begin{cases} \frac{1}{2}(y_i - \hat{y}_i)^2 & \text{for } |y_i - \hat{y}_i| \le \delta_i \\ \delta_i(|y_i - \hat{y}_i| - \frac{1}{2}\delta_i) & \text{otherwise} \end{cases}$$
-  $$\text{weight}_i = 1.0 + 2.0 \cdot (\text{corporate\_density}_i + \text{transit\_density}_i) + 0.3 \cdot \log(1 + \text{total\_violations}_i)$$
+  $$\text{weight}_i = 1.0 + 2.0 \cdot (\text{corporate density}_i + \text{transit density}_i) + 0.3 \cdot \log(1 + \text{total violations}_i)$$
 - **Vulnerability Index ($VI_i$) Evening Multiplier:** Corrects reporting biases during rush hours (where police citations drop to zero due to shifts) by calculating a structural bottleneck risk:
-  $$VI_i = 0.15 \cdot \text{POI\_Comm}_i + 0.15 \cdot \text{POI\_Trans}_i + 0.15 \cdot \text{POI\_Dine}_i + 0.15 \cdot \text{POI\_Corp}_i + 0.10 \cdot \text{Retail}_i + 0.10 \cdot \text{Kitchen}_i + 0.10 \cdot \text{eLoc}_i + 0.10 \cdot \left(\frac{1}{\text{Lanes}_i}\right)$$
+  $$VI_i = 0.15 \cdot \text{POI Comm}_i + 0.15 \cdot \text{POI Trans}_i + 0.15 \cdot \text{POI Dine}_i + 0.15 \cdot \text{POI Corp}_i + 0.10 \cdot \text{Retail}_i + 0.10 \cdot \text{Kitchen}_i + 0.10 \cdot \text{eLoc}_i + 0.10 \cdot \left(\frac{1}{\text{Lanes}_i}\right)$$
 - **Spatial-Lag XGBoost Regressor:** Serves as a high-precision fallback baseline modeled on spatial neighborhood averages.
 
 ### File & Method References
@@ -116,7 +116,7 @@ Takes the generated hotspots and schedules patrol dispatches. Users can adjust p
 ### Core Models & Math
 - **Global Integer Linear Programming (ILP) Optimization:** Replaces simple greedy scheduling with a global SciPy MILP solver.
 - **Objective Function:** Maximize the total composite priority score of selected hotspots, normalized by the required officer count:
-  $$\text{Maximize } \sum_{i} x_i \cdot \frac{w_1 \cdot C_i + w_2 \cdot L_i + w_3 \cdot R_i}{\text{officers\_required}_i}$$
+  $$\text{Maximize } \sum_{i} x_i \cdot \frac{w_1 \cdot C_i + w_2 \cdot L_i + w_3 \cdot R_i}{\text{officers required}_i}$$
   Where:
   - $x_i$: Number of officers deployed to hotspot $i$ (integer decision variable).
   - $C_i$: Predicted commuter time savings (hours).
@@ -124,9 +124,9 @@ Takes the generated hotspots and schedules patrol dispatches. Users can adjust p
   - $R_i$: Predicted traffic violation risk.
   - $w_1, w_2, w_3$: Sliders-based weights (summing to $1.0$).
 - **Constraints:**
-  - **Global Patrol Budget:** $\sum_{i} x_i \le \text{total\_available\_officers}$
-  - **Individual Hotspot Capacities:** $0 \le x_i \le \min(\text{officers\_required}_i, \text{max\_officers\_per\_hotspot})$
-  - **Station Bounds:** $\sum_{i \in \text{Station}_k} x_i \le \text{station\_limit}_k$ for each local police jurisdiction $k$.
+  - **Global Patrol Budget:** $\sum_{i} x_i \le \text{total available officers}$
+  - **Individual Hotspot Capacities:** $0 \le x_i \le \min(\text{officers required}_i, \text{max officers per hotspot})$
+  - **Station Bounds:** $\sum_{i \in \text{Station}_k} x_i \le \text{station limit}_k$ for each local police jurisdiction $k$.
 
 ### File & Method References
 - [dispatcher.py](file:///c:/Users/anujs/OneDrive/Desktop/GridLock%20Phase%202/backend/src/dispatcher.py):
@@ -144,7 +144,7 @@ Evaluates the physical traffic congestion impact of our dispatch choices. Transl
 
 ### Core Models & Math
 - **Road Capacity Reduction Factor (RCF):** Snapped slopes increase capacity bottlenecks for heavy vehicles:
-  $$\text{RCF}_i = \min(0.50, \text{Risk}_i \cdot \text{constriction\_coef} + 1.5 \cdot |\text{Slope}_i|)$$
+  $$\text{RCF}_i = \min(0.50, \text{Risk}_i \cdot \text{constriction coef} + 1.5 \cdot |\text{Slope}_i|)$$
 - **Greenshields Speed-Density Model:** Relates vehicular speed $v$ and density $\rho$:
   $$v = v_{\text{free}} \left(1 - \frac{\rho}{\rho_{\text{jam}} \cdot (1 - \text{RCF})}\right)$$
 - **Officer Mitigation Decay:** Deployed officers reduce bottleneck risks exponentially:
@@ -169,7 +169,7 @@ Integrates e-commerce supply chains with municipal traffic planning. Tracks logi
 - **Flipkart Logistics Penalty Index ($LPI$):** Scales road bottlenecks by a logistics importance factor ($\Lambda_i \in [1.0, 3.0]$) representing key delivery routes:
   $$LPI_i = \text{RCF}_i \times \Lambda_i$$
 - **Flipkart Supply KPIs:** Computes e-commerce SLA breaches avoided and financial cost savings:
-  $$\text{SLA Breaches Avoided}_i = \text{violations\_mitigated}_i \times 4.5$$
+  $$\text{SLA Breaches Avoided}_i = \text{violations mitigated}_i \times 4.5$$
   $$\text{Savings (INR)}_i = \text{SLA Breaches Avoided}_i \times 1200$$
 
 ### File & Method References

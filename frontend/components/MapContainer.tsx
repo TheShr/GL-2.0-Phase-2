@@ -1179,7 +1179,7 @@ export default function MapContainer({ hotspots, selectedId, onSelectHotspot, ro
 
   // 5. Pan to selected hotspot (Leaflet & Mappls support) & draw upstream queue trail
   useEffect(() => {
-    const map = mapRef.current;
+    const map = mapInstance;
     if (!map || selectedId === null) return;
 
     const h = hotspots.find(h => h.cluster_id === selectedId);
@@ -1194,13 +1194,19 @@ export default function MapContainer({ hotspots, selectedId, onSelectHotspot, ro
           // TASK 4: Draw queue trail on Leaflet map focus
           drawLeafletUpstreamTrail(map, h);
         } else if (sdkLoaded) {
-          if (typeof map.panTo === "function") {
-            map.panTo({ lat: h.lat, lng: h.lon });
-          } else if (typeof map.setCenter === "function") {
-            map.setCenter({ lat: h.lat, lng: h.lon });
-          }
-          if (typeof map.setZoom === "function") {
-            map.setZoom(13.5);
+          if (typeof map.flyTo === "function") {
+            map.flyTo({ center: { lat: h.lat, lng: h.lon }, zoom: 13.5 });
+          } else if (typeof map.jumpTo === "function") {
+            map.jumpTo({ center: { lat: h.lat, lng: h.lon }, zoom: 13.5 });
+          } else {
+            if (typeof map.panTo === "function") {
+              map.panTo({ lat: h.lat, lng: h.lon });
+            } else if (typeof map.setCenter === "function") {
+              map.setCenter({ lat: h.lat, lng: h.lon });
+            }
+            if (typeof map.setZoom === "function") {
+              map.setZoom(13.5);
+            }
           }
 
           // Open Mappls InfoWindow for the selected cluster
@@ -1218,7 +1224,7 @@ export default function MapContainer({ hotspots, selectedId, onSelectHotspot, ro
         console.error("[MapContainer] Viewport update failed: ", err);
       }
     }
-  }, [selectedId, hotspots, sdkLoaded, fallbackToLeaflet]);
+  }, [selectedId, hotspots, sdkLoaded, fallbackToLeaflet, mapInstance]);
 
 
 

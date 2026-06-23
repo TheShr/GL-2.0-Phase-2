@@ -136,7 +136,7 @@ export default function MapContainer({ hotspots, selectedId, onSelectHotspot, ro
 
   // Render search focus marker and pan to it
   useEffect(() => {
-    const map = mapRef.current;
+    const map = mapInstance;
     if (!map) return;
 
     // Clean up old markers first
@@ -291,19 +291,19 @@ export default function MapContainer({ hotspots, selectedId, onSelectHotspot, ro
         infoWindow.open(map);
         mapplsSearchInfoWindowRef.current = infoWindow;
 
-        if (typeof map.panTo === "function") {
-          map.panTo({ lat, lng });
-        } else if (typeof map.setCenter === "function") {
-          map.setCenter({ lat, lng });
-        }
-        if (typeof map.setZoom === "function") {
-          map.setZoom(15);
+        if (typeof map.flyTo === "function") {
+          map.flyTo({ center: { lat, lng }, zoom: 15 });
+        } else if (typeof map.jumpTo === "function") {
+          map.jumpTo({ center: { lat, lng }, zoom: 15 });
+        } else {
+          if (typeof map.setCenter === "function") map.setCenter({ lat, lng });
+          if (typeof map.setZoom === "function") map.setZoom(15);
         }
       } catch (err) {
         console.error("[MapContainer] Failed to place search marker: ", err);
       }
     }
-  }, [focusCoords, sdkLoaded, fallbackToLeaflet, leafletInstance]);
+  }, [focusCoords, sdkLoaded, fallbackToLeaflet, leafletInstance, mapInstance]);
 
   const [trafficEnabled, setTrafficEnabled] = useState(false);
   const [trafficFreeFlowEnabled, setTrafficFreeFlowEnabled] = useState(true);
@@ -562,7 +562,7 @@ export default function MapContainer({ hotspots, selectedId, onSelectHotspot, ro
 
   // Sync Leaflet fallback routes geometry via OSRM
   useEffect(() => {
-    const map = mapRef.current;
+    const map = mapInstance;
     if (!fallbackToLeaflet || !leafletInstance || !map) return;
 
     const LInstance = leafletInstance;
@@ -614,11 +614,11 @@ export default function MapContainer({ hotspots, selectedId, onSelectHotspot, ro
       leafletRoutesRef.current.forEach((p) => p.remove());
       leafletRoutesRef.current = [];
     };
-  }, [activeRoutes, showRoutes, fallbackToLeaflet, leafletInstance]);
+  }, [activeRoutes, showRoutes, fallbackToLeaflet, leafletInstance, mapInstance]);
 
   // Sync Mappls SDK routes geometry via OSRM
   useEffect(() => {
-    const map = mapRef.current;
+    const map = mapInstance;
     if (fallbackToLeaflet || !sdkLoaded || !map) return;
 
     const Mappls = (window as any).Mappls || (window as any).mappls;
@@ -1445,7 +1445,7 @@ export default function MapContainer({ hotspots, selectedId, onSelectHotspot, ro
   }, [hotspots, selectedId, sdkLoaded, fallbackToLeaflet, judgeMode, activeRoutes, mapInstance, visibleLayers, leafletInstance]);
 
   useEffect(() => {
-    const map = mapRef.current;
+    const map = mapInstance;
     if (!map || selectedId === null) return;
 
     const h = hotspots.find(h => h.cluster_id === selectedId);
@@ -1459,13 +1459,19 @@ export default function MapContainer({ hotspots, selectedId, onSelectHotspot, ro
           }
           drawLeafletUpstreamTrail(map, h);
         } else if (sdkLoaded) {
-          if (typeof map.panTo === "function") {
-            map.panTo({ lat: h.lat, lng: h.lon });
-          } else if (typeof map.setCenter === "function") {
-            map.setCenter({ lat: h.lat, lng: h.lon });
-          }
-          if (typeof map.setZoom === "function") {
-            map.setZoom(13.5);
+          if (typeof map.flyTo === "function") {
+            map.flyTo({ center: { lat: h.lat, lng: h.lon }, zoom: 13.5 });
+          } else if (typeof map.jumpTo === "function") {
+            map.jumpTo({ center: { lat: h.lat, lng: h.lon }, zoom: 13.5 });
+          } else {
+            if (typeof map.panTo === "function") {
+              map.panTo({ lat: h.lat, lng: h.lon });
+            } else if (typeof map.setCenter === "function") {
+              map.setCenter({ lat: h.lat, lng: h.lon });
+            }
+            if (typeof map.setZoom === "function") {
+              map.setZoom(13.5);
+            }
           }
 
           const infoWindow = infoWindowsMapRef.current.get(selectedId);
@@ -1481,7 +1487,7 @@ export default function MapContainer({ hotspots, selectedId, onSelectHotspot, ro
         console.error("[MapContainer] Viewport update failed: ", err);
       }
     }
-  }, [selectedId, hotspots, sdkLoaded, fallbackToLeaflet]);
+  }, [selectedId, hotspots, sdkLoaded, fallbackToLeaflet, mapInstance]);
 
   return (
     <div className="relative w-full h-full">

@@ -1,85 +1,104 @@
-"use client";
+"use client"; // Mark as client component
 
 import { useEffect, useRef, useState } from "react";
 import type L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useTheme } from "@/lib/theme";
 
-// Declare window types for Mappls
+// Declare global window types for Mappls mapping library
 declare global {
   interface Window {
-    Mappls: any;
-    mappls: any;
+    Mappls: any; // Mappls main object
+    mappls: any; // Mappls utilities
   }
 }
 
+/**
+ * Interface for traffic hotspot data
+ * Contains all information about a specific location requiring enforcement
+ */
 interface Hotspot {
-  rank: number;
-  cluster_id: number;
-  police_station: string;
-  road_class: string;
-  lanes: number;
-  lat: number;
-  lon: number;
-  predicted_risk_index: number;
-  capacity_reduction_rcf: number;
-  travel_time_before: string;
-  travel_time_after: string;
-  delay_savings_per_vehicle: string;
-  total_commuter_time_saved_hours: number;
-  priority_score: number;
-  target_shift: string;
-  enforcement_action: string;
-  logistics_weight: number;
-  logistics_penalty_index: number;
-  nearest_landmark?: string;
-  directed_side?: string;
-  upstream_edges?: { lat: number; lng: number }[][];
-  commercial_density?: number;
-  transit_density?: number;
-  dining_density?: number;
-  corporate_density?: number;
-  vulnerability_index?: number;
-  elevation?: number;
-  slope?: number;
+  rank: number; // Priority ranking
+  cluster_id: number; // Unique identifier
+  police_station: string; // Nearby police station
+  road_class: string; // Type of road (highway, arterial, etc.)
+  lanes: number; // Number of lanes
+  lat: number; // Latitude
+  lon: number; // Longitude
+  predicted_risk_index: number; // AI-predicted risk score
+  capacity_reduction_rcf: number; // Road capacity reduction factor
+  travel_time_before: string; // Travel time without enforcement
+  travel_time_after: string; // Travel time with enforcement
+  delay_savings_per_vehicle: string; // Time saved per vehicle
+  total_commuter_time_saved_hours: number; // Total hours saved
+  priority_score: number; // Priority score
+  target_shift: string; // Recommended enforcement shift
+  enforcement_action: string; // Type of action needed
+  logistics_weight: number; // Resource requirement
+  logistics_penalty_index: number; // Logistics penalty
+  nearest_landmark?: string; // Nearby landmark for reference
+  directed_side?: string; // Side of road
+  upstream_edges?: { lat: number; lng: number }[][]; // Connected street segments
+  commercial_density?: number; // Commercial area density
+  transit_density?: number; // Transit density
+  dining_density?: number; // Dining area density
+  corporate_density?: number; // Corporate area density
+  vulnerability_index?: number; // Vulnerability score
+  elevation?: number; // Elevation above sea level
+  slope?: number; // Road slope percentage
 }
 
+/**
+ * Interface for route data
+ * Represents a patrol or suggested route
+ */
 interface RouteData {
-  name: string;
-  coords: { lat: number; lng: number }[];
-  color: string;
+  name: string; // Route name
+  coords: { lat: number; lng: number }[]; // Coordinates along route
+  color: string; // Display color
 }
 
+/**
+ * Props for MapContainer component
+ */
 interface MapContainerProps {
-  hotspots: Hotspot[];
-  selectedId: number | null;
-  onSelectHotspot: (hotspot: Hotspot) => void;
-  routes?: RouteData[];
-  visibleLayers?: Record<string, boolean>;
-  focusCoords?: { lat: number; lng: number; name: string } | null;
+  hotspots: Hotspot[]; // All hotspots to display
+  selectedId: number | null; // Currently selected hotspot
+  onSelectHotspot: (hotspot: Hotspot) => void; // Callback when hotspot is selected
+  routes?: RouteData[]; // Optional patrol routes
+  visibleLayers?: Record<string, boolean>; // Layer visibility toggles
+  focusCoords?: { lat: number; lng: number; name: string } | null; // Location to focus on
 }
 
+/**
+ * Determines visual styling based on priority score
+ * Returns colors and animation classes for different severity levels
+ */
 function getTierStyle(score: number) {
   if (score >= 15.0) return {
-    color: "#DC2626",
+    color: "#DC2626", // Red for critical
     fillColor: "#DC2626",
     pulseClass: "pulse-ring-alert",
     labelColor: "#DC2626",
   };
   if (score >= 3.0) return {
-    color: "#D97706",
+    color: "#D97706", // Orange for warning
     fillColor: "#D97706",
     pulseClass: "pulse-ring-warning",
     labelColor: "#D97706",
   };
   return {
-    color: "#0077CC",
+    color: "#0077CC", // Blue for normal
     fillColor: "#0077CC",
     pulseClass: "pulse-ring-cyan",
     labelColor: "#0077CC",
   };
 }
 
+/**
+ * Cleans landmark name for display
+ * Removes city names and extra formatting
+ */
 function cleanLandmark(landmark: string | undefined, roadClass: string) {
   if (!landmark) return `Near ${roadClass}`;
   let clean = landmark.split(/Bengaluru/i)[0].trim();
@@ -89,31 +108,53 @@ function cleanLandmark(landmark: string | undefined, roadClass: string) {
   return clean ? `Near ${clean}` : `Near ${roadClass}`;
 }
 
+/**
+ * Extracts coordinate center from hotspot
+ */
 function getHotspotCircleCenter(h: Hotspot) {
   return { lat: h.lat, lng: h.lon };
 }
 
+/**
+ * MapContainer Component - Renders interactive map with hotspots
+ * Displays traffic hotspots, routes, and allows user interaction
+ */
 export default function MapContainer({ hotspots, selectedId, onSelectHotspot, routes, visibleLayers, focusCoords }: MapContainerProps) {
+  // Reference to map container DOM element
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  // Reference to map instance
   const mapRef = useRef<any>(null);
+  // Ref to callback function (to avoid stale closures)
   const onSelectHotspotRef = useRef(onSelectHotspot);
 
+  // Markers for search results on Leaflet
   const leafletSearchMarkerRef = useRef<L.Marker | null>(null);
+  // Markers for search results on Mappls
   const mapplsSearchMarkerRef = useRef<any | null>(null);
+  // Info windows on Mappls
   const mapplsSearchInfoWindowRef = useRef<any | null>(null);
 
+  // Keep callback ref in sync
   useEffect(() => {
     onSelectHotspotRef.current = onSelectHotspot;
   }, [onSelectHotspot]);
 
+  // Map instance state
   const [mapInstance, setMapInstance] = useState<any>(null);
+  // Layer group for Leaflet hotspot markers
   const leafletLayersRef = useRef<L.LayerGroup | null>(null);
+  // Tile layer reference for theme switching
   const tileLayerRef = useRef<L.TileLayer | null>(null);
+  // Array of Leaflet polylines for routes
   const leafletRoutesRef = useRef<L.Polyline[]>([]);
+  // Array of Mappls route polylines
   const mapplsRoutesRef = useRef<any[]>([]);
+  // Dynamically loaded Leaflet library
   const [leafletInstance, setLeafletInstance] = useState<typeof L | null>(null);
+  // Current theme (dark/light mode)
   const { theme } = useTheme();
 
+  // Load Leaflet library dynamically
   useEffect(() => {
     if (typeof window === "undefined") return;
     import("leaflet").then((mod) => {

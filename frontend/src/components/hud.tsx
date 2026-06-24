@@ -2,7 +2,11 @@ import { cn } from "@/lib/utils";
 import type { Severity } from "@/lib/mock";
 import type { ReactNode } from "react";
 
-/** Mission-control readout: small tracked eyebrow above a big mono numeral. */
+/**
+ * Readout Component - Mission-control style display element
+ * Shows a label above a large monospace number with optional unit
+ * Used to display key metrics and data in the dashboard
+ */
 export function Readout({
   label,
   value,
@@ -18,30 +22,42 @@ export function Readout({
   critical?: boolean;
   className?: string;
 }) {
+  // Map size prop to Tailwind text size classes
   const sizes = { sm: "text-lg", md: "text-2xl", lg: "text-4xl", xl: "text-6xl" };
   return (
     <div className={className}>
+      {/* Small label text above the main value */}
       <div className="eyebrow">{label}</div>
+      {/* Large monospace number display, uses critical color if needed */}
       <div
         className={cn("readout font-medium leading-none mt-1", sizes[size])}
         style={{ color: critical ? "var(--critical)" : "var(--text-primary)" }}
       >
         {value}
+        {/* Optional unit text displayed at smaller size */}
         {unit ? <span className="text-text-muted text-[0.5em] ml-0.5 align-top">{unit}</span> : null}
       </div>
     </div>
   );
 }
 
-/** Status beacon — static gray square; only critical blinks slowly. */
+/**
+ * Beacon Component - Status indicator square
+ * Shows system status with visual severity levels (critical blinks, others fade)
+ * Used throughout the dashboard for status monitoring
+ */
 export function Beacon({ severity, className }: { severity: Severity; className?: string }) {
+  // Determine if this is a critical alert requiring animation
   const isCritical = severity === "critical";
+  // Set opacity based on severity level - critical is always visible
   const opacity = severity === "high" ? 0.85 : severity === "elevated" ? 0.6 : 0.4;
   return (
     <span
       className={cn("inline-block h-2 w-2 shrink-0", isCritical && "alarm", className)}
       style={{
+        // Critical status uses red color, others use muted text color
         backgroundColor: isCritical ? "var(--critical)" : "var(--text-muted)",
+        // Critical is fully opaque, other severities fade
         opacity: isCritical ? 1 : opacity,
       }}
       aria-label={severity}

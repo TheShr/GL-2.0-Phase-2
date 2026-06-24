@@ -1,4 +1,4 @@
-"use client";
+"use client"; // Mark this as a client component for Next.js
 
 import { useEffect, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
@@ -13,8 +13,10 @@ import CommandBar from "../components/CommandBar";
 import FloatingKPIs from "../components/FloatingKPIs";
 import BottomSheet from "../components/BottomSheet";
 
+// Dynamically load MapContainer to avoid server-side rendering
+// Shows loading message while the map is initializing
 const MapContainer = dynamic(() => import("../components/MapContainer"), {
-  ssr: false,
+  ssr: false, // Disable server-side rendering for map
   loading: () => (
     <div className="flex h-full w-full items-center justify-center text-slate-400 text-xs tracking-widest font-medium">
       Initializing cartographic engine...
@@ -22,72 +24,96 @@ const MapContainer = dynamic(() => import("../components/MapContainer"), {
   ),
 });
 
+/**
+ * Interface for a traffic hotspot
+ * Represents a single high-priority location for enforcement action
+ */
 interface Hotspot {
-  rank: number;
-  cluster_id: number;
-  police_station: string;
-  road_class: string;
-  lanes: number;
-  lat: number;
-  lon: number;
-  predicted_risk_index: number;
-  capacity_reduction_rcf: number;
-  travel_time_before: string;
-  travel_time_after: string;
-  delay_savings_per_vehicle: string;
-  total_commuter_time_saved_hours: number;
-  priority_score: number;
-  target_shift: string;
-  enforcement_action: string;
-  logistics_weight: number;
-  logistics_penalty_index: number;
-  directed_side?: string;
-  upstream_edges?: { lat: number; lng: number }[][];
+  rank: number; // Priority ranking of this hotspot
+  cluster_id: number; // Unique cluster identifier
+  police_station: string; // Nearest police station
+  road_class: string; // Classification of the road
+  lanes: number; // Number of lanes at this location
+  lat: number; // Latitude coordinate
+  lon: number; // Longitude coordinate
+  predicted_risk_index: number; // AI-predicted risk score
+  capacity_reduction_rcf: number; // Road capacity reduction factor
+  travel_time_before: string; // Estimated travel time before enforcement
+  travel_time_after: string; // Estimated travel time after enforcement
+  delay_savings_per_vehicle: string; // Time saved per vehicle
+  total_commuter_time_saved_hours: number; // Total hours saved by enforcement
+  priority_score: number; // Overall priority score for action
+  target_shift: string; // Time shift for enforcement (e.g., "morning", "evening")
+  enforcement_action: string; // Type of enforcement recommended
+  logistics_weight: number; // Resource requirement weight
+  logistics_penalty_index: number; // Penalty index for logistics
+  directed_side?: string; // Side of road for enforcement
+  upstream_edges?: { lat: number; lng: number }[][]; // Upstream street segments
 }
 
+/**
+ * Interface for patrol route data
+ * Represents suggested patrol paths for enforcement
+ */
 interface RouteData {
-  name: string;
-  coords: { lat: number; lng: number }[];
-  color: string;
+  name: string; // Route identifier
+  coords: { lat: number; lng: number }[]; // Coordinates along the route
+  color: string; // Display color for the route
 }
 
+/**
+ * Interface for summary statistics
+ * Aggregated metrics across all hotspots
+ */
 interface SummaryStats {
-  total_hotspots: number;
-  total_violations: number;
-  avg_capacity_recovered: number;
-  total_savings: number;
+  total_hotspots: number; // Total number of identified hotspots
+  total_violations: number; // Total violations predicted
+  avg_capacity_recovered: number; // Average capacity recovery percentage
+  total_savings: number; // Total commuter time savings in hours
 }
 
+/**
+ * Home Component - Main dashboard page
+ * Displays traffic hotspots, enforcement recommendations, and real-time metrics
+ */
 export default function Home() {
+  // Main data state containing API response
   const [data, setData] = useState<{ summary: SummaryStats; hotspots: Hotspot[]; routes?: RouteData[] } | null>(null);
+  // Currently selected hotspot ID for detailed view
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  // Loading state for data fetch
   const [loading, setLoading] = useState(true);
+  // Error messages if data fetch fails
   const [error, setError] = useState<string | null>(null);
+  // Selected time for filtering data
   const [selectedTime, setSelectedTime] = useState("08:00");
+  // Whether dispatch plan overlay is open
   const [isDispatchPlanOpen, setIsDispatchPlanOpen] = useState(false);
+  // Current theme (dark or light mode)
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
-  // Drawer & Overlay UI States
-  const [leftDrawerOpen, setLeftDrawerOpen] = useState(false);
-  const [rightDrawerOpen, setRightDrawerOpen] = useState(false);
-  const [judgeMode, setJudgeMode] = useState(false);
-  const [trafficCommanderOpen, setTrafficCommanderOpen] = useState(false);
+  // States for sidebar and overlay panels
+  const [leftDrawerOpen, setLeftDrawerOpen] = useState(false); // Left panel toggle
+  const [rightDrawerOpen, setRightDrawerOpen] = useState(false); // Right panel toggle
+  const [judgeMode, setJudgeMode] = useState(false); // Judge/review mode
+  const [trafficCommanderOpen, setTrafficCommanderOpen] = useState(false); // Traffic command panel
 
-  // Map layer visibility states
+  // Map layer visibility toggles
   const [visibleLayers, setVisibleLayers] = useState<Record<string, boolean>>({
-    hotspots: true,
-    routes: true,
-    patrols: true,
-    congestion: true,
+    hotspots: true, // Show hotspot markers
+    routes: true, // Show patrol routes
+    patrols: true, // Show patrol areas
+    congestion: true, // Show congestion heatmap
   });
 
-  // Autocomplete search states
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  // Autocomplete search feature states
+  const [searchQuery, setSearchQuery] = useState(""); // Current search input
+  const [searchResults, setSearchResults] = useState<any[]>([]); // Search result list
 
-  // Simulation updates states (to update metric badges globally in real time)
+  // Real-time simulation updates for metric badges
   const [simulatedUpdates, setSimulatedUpdates] = useState<Record<number, { capacity_reduction_after: number; total_commuter_time_saved_hours: number }>>({});
 
+  // Fetch model outputs from backend API
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -96,6 +122,7 @@ export default function Home() {
       if (!res.ok) throw new Error("Failed to load model outputs.");
       const json = await res.json();
       setData(json);
+      // Auto-select first hotspot if available
       if (json.hotspots?.length > 0) {
         setSelectedId(json.hotspots[0].cluster_id);
       }

@@ -6,8 +6,13 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "@/lib/theme";
 import { useApp } from "@/lib/app-context";
 
+// Type for different heatmap visualization layers available in the map
 export type HeatmapLayer = "risk" | "violations" | "congestion" | "dispatch" | "logistics";
 
+/**
+ * MissionMap Component - Main map visualization for traffic hotspots and enforcement data
+ * Displays real-time traffic data, predictive analytics, and patrol routes on a Leaflet map
+ */
 export function MissionMap({
   compact = false,
   focus,
@@ -19,30 +24,41 @@ export function MissionMap({
   compact?: boolean;
   focus?: string | null;
   onSelect?: (h: any) => void;
-  heatmapCase: HeatmapLayer;
-  setHeatmapCase: (val: HeatmapLayer) => void;
+  heatmapCase: HeatmapLayer; // Current heatmap visualization type
+  setHeatmapCase: (val: HeatmapLayer) => void; // Callback to change heatmap type
   expanded?: boolean;
 }) {
+  // Reference to the map container DOM element
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  // Reference to the Leaflet map instance
   const mapRef = useRef<L.Map | null>(null);
+  // Reference to the tile layer for theme switching
   const tileLayerRef = useRef<L.TileLayer | null>(null);
+  // Get hotspots and route data from telemetry context
   const { rawHotspots, routes } = useTelemetry();
+  // Reference to the heatmap layers container
   const heatmapLayersRef = useRef<L.LayerGroup | null>(null);
+  // Reference to the KDE (Kernel Density Estimation) overlay image
   const kdeOverlayRef = useRef<L.ImageOverlay | null>(null);
+  // State for dynamically loaded Leaflet library
   const [leafletInstance, setLeafletInstance] = useState<typeof L | null>(null);
+  // Current theme (dark/light) for map styling
   const { theme } = useTheme();
+  // Current time lapse hour for filtering data
   const { timeLapseHour } = useApp();
 
-  // Overlay render configuration states
+  // States for toggling different map overlay layers
   const [showKde, setShowKde] = useState(true);
   const [showIncidentPoints, setShowIncidentPoints] = useState(false);
   const [showClusterBoundaries, setShowClusterBoundaries] = useState(false);
   const [showPredicted, setShowPredicted] = useState(false);
   const [showPatrolRoutes, setShowPatrolRoutes] = useState(false);
+  // Current zoom level of the map
   const [mapZoom, setMapZoom] = useState(11);
+  // Trigger for redrawing canvas-based overlays
   const [redrawTrigger, setRedrawTrigger] = useState(0);
 
-  // Dynamically load Leaflet on client side
+  // Dynamically import Leaflet library on client side to avoid SSR issues
   useEffect(() => {
     if (typeof window === "undefined") return;
     import("leaflet").then((mod) => {
@@ -50,22 +66,25 @@ export function MissionMap({
     });
   }, []);
 
-  // Initialize Map
+  // Initialize the map instance with base layer and event handlers
   useEffect(() => {
     if (!leafletInstance || typeof window === "undefined" || !mapContainerRef.current || mapRef.current) return;
 
     try {
+      // Create map centered on Bengaluru with initial zoom level
       const map = leafletInstance.map(mapContainerRef.current, {
-        center: [12.9716, 77.5946],
+        center: [12.9716, 77.5946], // Bengaluru coordinates
         zoom: 11,
-        zoomControl: false,
-        attributionControl: false,
+        zoomControl: false, // Custom zoom control instead
+        attributionControl: false, // Hide attribution
       });
 
+      // Select tile layer based on theme (dark or light mode)
       const initialUrl = theme === "dark"
         ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
 
+      // Add tile layer to map
       const tileLayer = leafletInstance.tileLayer(initialUrl, {
         maxZoom: 19,
         minZoom: 10,
@@ -74,7 +93,7 @@ export function MissionMap({
       tileLayerRef.current = tileLayer;
       mapRef.current = map;
 
-      // Event listeners for tracking zoom and trigger redraw of the canvas KDE
+      // Event handlers for map interactions - track zoom and trigger redraw
       const handleZoom = () => {
         setMapZoom(map.getZoom());
       };
@@ -82,10 +101,11 @@ export function MissionMap({
         setRedrawTrigger((t) => t + 1);
       };
 
+      // Register event listeners
       map.on("zoomend", handleZoom);
-      map.on("moveend", triggerRedraw);
-      map.on("zoomend", triggerRedraw);
-      map.on("resize", triggerRedraw);
+      map.on("moveend", triggerRedraw); // Pan events
+      map.on("zoomend", triggerRedraw); // Zoom events
+      map.on("resize", triggerRedraw); // Window resize events
 
       // Set initial zoom level
       setMapZoom(map.getZoom());

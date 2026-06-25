@@ -14,6 +14,8 @@ import { reportAtlasError } from "../lib/atlas-error-reporting";
 import { ThemeProvider } from "../lib/theme";
 import { AppProvider } from "../lib/app-context";
 import { AppShell } from "../components/shell/AppShell";
+import { GaTracker } from "../components/GaTracker";
+import { GA_MEASUREMENT_ID } from "../lib/analytics";
 
 function NotFoundComponent() {
   return (
@@ -106,6 +108,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
     ],
+    // Google Analytics 4 — loaded once for all pages via the root head.
+    // The inline config script is handled in RootShell via dangerouslySetInnerHTML
+    // because TanStack Router's head() API only supports <link> and <meta> entries.
+    scripts: [
+      {
+        src: `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`,
+        async: true,
+      },
+      {
+        // Initialises the dataLayer and fires the first page_view.
+        // Client-side navigation page_views are fired by <GaTracker />.
+        children: `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', '${GA_MEASUREMENT_ID}');`,
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -122,6 +138,8 @@ function RootShell({ children }: { children: ReactNode }) {
       <body>
         {children}
         <Scripts />
+        {/* GaTracker fires a GA4 page_view on every client-side navigation */}
+        <GaTracker />
       </body>
     </html>
   );

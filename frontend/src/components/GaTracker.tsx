@@ -18,7 +18,9 @@ export function GaTracker() {
   useEffect(() => {
     // Subscribe fires after every resolved navigation (including the initial load).
     const unsubscribe = router.subscribe("onResolved", () => {
-      pageView(router.state.location.pathname + router.state.location.search);
+      // location.search is a parsed object in TanStack Router, not a string.
+      // Use location.href which is the full pre-built path string (pathname + searchStr + hash).
+      pageView(router.state.location.href);
     });
 
     return () => {
